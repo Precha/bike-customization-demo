@@ -1,0 +1,181 @@
+{
+  "$schema": "https://design-tokens.github.io/community-group/format/",
+  "meta": {
+    "source": "Giant Bike Customization UI",
+    "extractedFrom": "Bike Customization.pdf",
+    "date": "2026-04-29",
+    "viewport": "1440px"
+  },
+
+  "color": {
+    "base": {
+      "black":           { "$value": "#000000", "$type": "color" },
+      "white":           { "$value": "#FFFFFF", "$type": "color" },
+      "gray-50":         { "$value": "#F2F2F2", "$type": "color", "$description": "Page / panel background (grayscale 0.950)" },
+      "gray-100":        { "$value": "#E5E5E5", "$type": "color", "$description": "Divider / subtle border" },
+      "gray-300":        { "$value": "#B0B0B0", "$type": "color", "$description": "Disabled / placeholder text" },
+      "gray-500":        { "$value": "#8D8D8D", "$type": "color", "$description": "Secondary label (grayscale 0.553)" },
+      "gray-600":        { "$value": "#6E6E6E", "$type": "color", "$description": "Inactive tab / caption (grayscale 0.431)" },
+      "gray-900":        { "$value": "#090909", "$type": "color", "$description": "Dark panel / customizer sidebar (grayscale 0.033)" }
+    },
+    "paint": {
+      "giant-white":     { "$value": "#F5F5F5", "$type": "color", "$description": "Giant White WT-001" },
+      "giant-black":     { "$value": "#1A1A1A", "$type": "color", "$description": "Giant Black BK-001" },
+      "brilliant-silver":{ "$value": "#C0C0C0", "$type": "color", "$description": "Brilliant Silver metallic" },
+      "glory-orange":    { "$value": "#E8601A", "$type": "color", "$description": "Glory Orange" },
+      "ice-crystal":     { "$value": "#D4EAF7", "$type": "color", "$description": "Ice Crystal pale blue" },
+      "metal-blue":      { "$value": "#3A6EA5", "$type": "color", "$description": "Metal Blue" }
+    },
+    "semantic": {
+      "background-page":     { "$value": "{color.base.white}",   "$type": "color" },
+      "background-panel":    { "$value": "{color.base.gray-50}", "$type": "color" },
+      "background-sidebar":  { "$value": "{color.base.gray-900}","$type": "color" },
+      "text-primary":        { "$value": "{color.base.black}",   "$type": "color" },
+      "text-secondary":      { "$value": "{color.base.gray-600}","$type": "color" },
+      "text-on-dark":        { "$value": "{color.base.white}",   "$type": "color" },
+      "border-default":      { "$value": "{color.base.gray-100}","$type": "color" },
+      "border-active":       { "$value": "{color.base.black}",   "$type": "color" },
+      "accent-primary":      { "$value": "{color.base.black}",   "$type": "color" },
+      "accent-cta":          { "$value": "{color.base.black}",   "$type": "color" }
+    }
+  },
+
+  "typography": {
+    "fontFamily": {
+      "sans": { "$value": "'Inter', 'Helvetica Neue', Arial, sans-serif", "$type": "fontFamily" }
+    },
+    "fontSize": {
+      "xs":   { "$value": "10px", "$type": "dimension" },
+      "sm":   { "$value": "12px", "$type": "dimension" },
+      "md":   { "$value": "14px", "$type": "dimension" },
+      "base": { "$value": "15px", "$type": "dimension" },
+      "lg":   { "$value": "16px", "$type": "dimension" },
+      "xl":   { "$value": "18px", "$type": "dimension" },
+      "2xl":  { "$value": "20px", "$type": "dimension" },
+      "3xl":  { "$value": "24px", "$type": "dimension" },
+      "hero": { "$value": "48px", "$type": "dimension", "$description": "Hero headline on landing page" }
+    },
+    "fontWeight": {
+      "regular": { "$value": "400", "$type": "fontWeight" },
+      "medium":  { "$value": "500", "$type": "fontWeight" },
+      "semibold": { "$value": "600", "$type": "fontWeight" },
+      "bold":    { "$value": "700", "$type": "fontWeight" }
+    },
+    "lineHeight": {
+      "tight":  { "$value": "1.2", "$type": "number" },
+      "normal": { "$value": "1.5", "$type": "number" },
+      "relaxed":{ "$value": "1.7", "$type": "number" }
+    }
+  },
+
+  "spacing": {
+    "1":  { "$value": "4px",  "$type": "dimension" },
+    "2":  { "$value": "8px",  "$type": "dimension" },
+    "3":  { "$value": "12px", "$type": "dimension" },
+    "4":  { "$value": "16px", "$type": "dimension" },
+    "5":  { "$value": "20px", "$type": "dimension" },
+    "6":  { "$value": "24px", "$type": "dimension" },
+    "8":  { "$value": "32px", "$type": "dimension" },
+    "10": { "$value": "40px", "$type": "dimension" },
+    "12": { "$value": "48px", "$type": "dimension" },
+    "14": { "$value": "56px", "$type": "dimension" },
+    "16": { "$value": "64px", "$type": "dimension" },
+    "20": { "$value": "80px", "$type": "dimension" },
+    "24": { "$value": "88px", "$type": "dimension", "$description": "Navigation / header height" },
+    "sidebar": { "$value": "400px", "$type": "dimension", "$description": "Right customizer sidebar width" }
+  },
+
+  "borderRadius": {
+    "none": { "$value": "0px",  "$type": "dimension" },
+    "sm":   { "$value": "4px",  "$type": "dimension" },
+    "md":   { "$value": "8px",  "$type": "dimension" },
+    "lg":   { "$value": "12px", "$type": "dimension" },
+    "full": { "$value": "9999px", "$type": "dimension" }
+  },
+
+  "shadow": {
+    "panel": {
+      "$value": "0 2px 8px rgba(0,0,0,0.08)",
+      "$type": "shadow"
+    },
+    "card": {
+      "$value": "0 1px 4px rgba(0,0,0,0.06)",
+      "$type": "shadow"
+    }
+  },
+
+  "breakpoint": {
+    "sm":  { "$value": "640px",  "$type": "dimension" },
+    "md":  { "$value": "768px",  "$type": "dimension" },
+    "lg":  { "$value": "1024px", "$type": "dimension" },
+    "xl":  { "$value": "1280px", "$type": "dimension" },
+    "2xl": { "$value": "1440px", "$type": "dimension", "$description": "Native design canvas width" }
+  },
+
+  "component": {
+    "nav": {
+      "height":      { "$value": "56px",  "$type": "dimension" },
+      "paddingX":    { "$value": "88px",  "$type": "dimension" },
+      "background":  { "$value": "#FFFFFF", "$type": "color" },
+      "borderBottom":{ "$value": "1px solid #E5E5E5", "$type": "border" }
+    },
+    "tab": {
+      "fontSize":    { "$value": "14px",   "$type": "dimension" },
+      "paddingX":    { "$value": "16px",   "$type": "dimension" },
+      "paddingY":    { "$value": "8px",    "$type": "dimension" },
+      "colorActive": { "$value": "#000000","$type": "color" },
+      "colorInactive":{ "$value": "#8D8D8D","$type": "color" },
+      "borderActive":{ "$value": "2px solid #000000", "$type": "border" }
+    },
+    "button": {
+      "primary": {
+        "background": { "$value": "#000000", "$type": "color" },
+        "color":      { "$value": "#FFFFFF", "$type": "color" },
+        "paddingX":   { "$value": "24px",    "$type": "dimension" },
+        "paddingY":   { "$value": "12px",    "$type": "dimension" },
+        "borderRadius":{ "$value": "4px",    "$type": "dimension" },
+        "fontSize":   { "$value": "14px",    "$type": "dimension" },
+        "fontWeight": { "$value": "600",     "$type": "fontWeight" }
+      },
+      "secondary": {
+        "background": { "$value": "transparent", "$type": "color" },
+        "color":      { "$value": "#000000",     "$type": "color" },
+        "border":     { "$value": "1px solid #000000", "$type": "border" },
+        "paddingX":   { "$value": "24px",        "$type": "dimension" },
+        "paddingY":   { "$value": "12px",        "$type": "dimension" },
+        "borderRadius":{ "$value": "4px",        "$type": "dimension" }
+      },
+      "ghost": {
+        "background": { "$value": "transparent", "$type": "color" },
+        "color":      { "$value": "#6E6E6E",     "$type": "color" }
+      }
+    },
+    "radioOption": {
+      "gap":          { "$value": "8px",   "$type": "dimension" },
+      "borderRadius": { "$value": "4px",   "$type": "dimension" },
+      "borderDefault":{ "$value": "1px solid #E5E5E5", "$type": "border" },
+      "borderActive": { "$value": "1px solid #000000", "$type": "border" },
+      "background":   { "$value": "#FFFFFF", "$type": "color" },
+      "padding":      { "$value": "12px",    "$type": "dimension" }
+    },
+    "priceBar": {
+      "background":   { "$value": "#FFFFFF", "$type": "color" },
+      "borderTop":    { "$value": "1px solid #E5E5E5", "$type": "border" },
+      "paddingX":     { "$value": "24px",    "$type": "dimension" },
+      "paddingY":     { "$value": "16px",    "$type": "dimension" },
+      "priceFontSize":{ "$value": "20px",    "$type": "dimension" },
+      "priceFontWeight":{ "$value": "700",   "$type": "fontWeight" }
+    },
+    "colorSwatch": {
+      "size":         { "$value": "32px",  "$type": "dimension" },
+      "borderRadius": { "$value": "50%",   "$type": "dimension" },
+      "borderActive": { "$value": "2px solid #000000", "$type": "border" },
+      "gap":          { "$value": "8px",   "$type": "dimension" }
+    },
+    "stepIndicator": {
+      "dotSize":      { "$value": "8px",   "$type": "dimension" },
+      "dotActive":    { "$value": "#000000","$type": "color" },
+      "dotInactive":  { "$value": "#C0C0C0","$type": "color" }
+    }
+  }
+}

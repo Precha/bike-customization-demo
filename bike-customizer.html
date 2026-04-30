@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Propel Advanced SL — Giant Custom Paint Program</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --black:       #000;
+      --white:       #fff;
+      --gray-50:     #F4F4F4;
+      --gray-100:    #E8E8E8;
+      --gray-200:    #D0D0D0;
+      --gray-300:    #B0B0B0;
+      --gray-500:    #8A8A8A;
+      --gray-600:    #6A6A6A;
+      --gray-900:    #111;
+      --giant-blue:  #06038D;
+      --orange:      #E8601A;
+      --viewer-bg:   #EBEBEB;
+      --panel-w:     290px;
+      --nav-h:       80px;
+      --ease:        cubic-bezier(.4,0,.2,1);
+    }
+    *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+    html, body { height:100%; overflow:hidden; }
+    body { font-family:'Inter','Helvetica Neue',Arial,sans-serif; -webkit-font-smoothing:antialiased; color:var(--black); }
+
+    /* ── SCREENS ── */
+    .screen { position:fixed; inset:0; display:none; flex-direction:column; }
+    .screen.active { display:flex; }
+
+    /* ════════════════════════════════════
+       SHARED NAV (both screens)
+    ════════════════════════════════════ */
+    .site-nav {
+      height: var(--nav-h);
+      background: var(--white);
+      border-bottom: 1px solid var(--gray-100);
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      padding: 0 20px;
+      flex-shrink: 0;
+      z-index: 100;
+    }
+    .nav-left { display:flex; align-items:center; gap:2px; }
+    .nav-hamburger { width:36px; height:36px; display:flex; align-items:center; justify-content:center; background:none; border:none; cursor:pointer; font-size:18px; color:var(--black); border-radius:4px; transition:background .12s; }
+    .nav-hamburger:hover { background:var(--gray-50); }
+    .nav-link { font-size:13px; font-weight:500; color:var(--black); padding:8px 10px; background:none; border:none; cursor:pointer; white-space:nowrap; border-radius:4px; transition:background .12s; }
+    .nav-link:hover { background:var(--gray-50); }
+    .nav-center { display:flex; justify-content:center; align-items:center; }
+    .nav-center img { height:60px; }
+    .nav-right { display:flex; align-items:center; justify-content:flex-end; gap:4px; }
+    .nav-icon { width:36px; height:36px; display:flex; align-items:center; justify-content:center; background:none; border:none; cursor:pointer; font-size:16px; color:var(--black); border-radius:4px; transition:background .12s; }
+    .nav-icon:hover { background:var(--gray-50); }
+
+    /* ════════════════════════════════════
+       LANDING SCREEN
+    ════════════════════════════════════ */
+    #s-landing { background:#0a0a0a; }
+    #s-landing .site-nav { background:rgba(255,255,255,.06); border-bottom-color:rgba(255,255,255,.1); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); }
+    #s-landing .nav-link, #s-landing .nav-hamburger, #s-landing .nav-icon { color:var(--white); }
+    #s-landing .nav-link:hover, #s-landing .nav-hamburger:hover, #s-landing .nav-icon:hover { background:rgba(255,255,255,.1); }
+    #s-landing .nav-center img { filter:brightness(0) invert(1); }
+
+    .hero { flex:1; position:relative; overflow:hidden; }
+    .hero-bg { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; opacity:.5; }
+    .hero-overlay { position:absolute; inset:0; background:linear-gradient(135deg,rgba(0,0,0,.78) 0%,rgba(0,0,0,.3) 55%,rgba(0,0,0,.05) 100%); }
+    .hero-content { position:absolute; inset:0; display:flex; flex-direction:column; justify-content:center; padding:0 9%; }
+    .hero-eyebrow { font-size:10px; font-weight:700; letter-spacing:.22em; color:rgba(255,255,255,.5); text-transform:uppercase; margin-bottom:22px; }
+    .hero-title { font-size:76px; font-weight:800; line-height:1.0; color:var(--white); letter-spacing:-.025em; margin-bottom:26px; }
+    .hero-sub { font-size:17px; font-weight:400; color:rgba(255,255,255,.68); line-height:1.75; max-width:600px; margin-bottom:52px; }
+    .hero-actions { display:flex; gap:14px; align-items:center; }
+    .btn-cta { padding:15px 38px; background:var(--white); color:var(--black); border:none; border-radius:3px; font-size:13px; font-weight:700; letter-spacing:.07em; text-transform:uppercase; cursor:pointer; transition:opacity .18s; }
+    .btn-cta:hover { opacity:.88; }
+    .btn-outline-hero { padding:14px 32px; background:transparent; color:var(--white); border:1px solid rgba(255,255,255,.38); border-radius:3px; font-size:13px; font-weight:600; letter-spacing:.06em; cursor:pointer; transition:all .18s; display:flex; align-items:center; gap:8px; }
+    .btn-outline-hero:hover { background:rgba(255,255,255,.1); border-color:rgba(255,255,255,.7); }
+    .hero-chips { position:absolute; right:7%; top:50%; transform:translateY(-50%); display:flex; flex-direction:column; gap:10px; }
+    .hero-chip-row { display:flex; gap:8px; }
+    .hero-chip { width:34px; height:34px; border-radius:50%; cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,.4); border:2px solid rgba(255,255,255,.15); background-size:cover; background-position:center; transition:transform .15s,border-color .15s; }
+    .hero-chip:hover { transform:scale(1.18); border-color:rgba(255,255,255,.75); }
+    .hero-stats { position:absolute; bottom:0; left:0; right:0; height:64px; background:rgba(0,0,0,.35); backdrop-filter:blur(12px); border-top:1px solid rgba(255,255,255,.08); display:flex; align-items:center; padding:0 9%; gap:56px; }
+    .stat-item { display:flex; flex-direction:column; gap:2px; }
+    .stat-val { font-size:18px; font-weight:700; color:var(--white); }
+    .stat-lbl { font-size:9.5px; font-weight:600; color:rgba(255,255,255,.45); letter-spacing:.1em; text-transform:uppercase; }
+
+    /* ════════════════════════════════════
+       CUSTOMIZER SCREEN
+    ════════════════════════════════════ */
+    .cust-body { flex:1; display:flex; overflow:hidden; min-height:0; }
+
+    /* Viewer */
+    .viewer { flex:1; background:var(--viewer-bg); display:flex; align-items:center; justify-content:center; position:relative; min-width:0; }
+    .bike-stage { position:relative; width:94%; max-width:1060px; aspect-ratio:2048/1287; }
+    .bike-stage img { position:absolute; inset:0; width:100%; height:100%; object-fit:contain; transition:opacity .28s var(--ease); }
+    .bike-stage img.hidden { opacity:0; }
+    .viewer-light-toggle { position:absolute; bottom:20px; left:20px; display:flex; align-items:center; gap:8px; background:rgba(255,255,255,.85); border:1px solid rgba(0,0,0,.1); border-radius:100px; padding:6px 14px; cursor:pointer; font-size:11px; font-weight:600; letter-spacing:.04em; backdrop-filter:blur(8px); transition:background .15s; user-select:none; }
+    .viewer-light-toggle:hover { background:rgba(255,255,255,.98); }
+    .viewer-light-toggle .tgl-icon { font-size:14px; }
+
+    /* ── RIGHT PANEL ── */
+    .panel { width:var(--panel-w); background:var(--white); border-left:1px solid var(--gray-100); display:flex; flex-direction:column; flex-shrink:0; min-height:0; }
+
+    /* Tabs */
+    .panel-tabs { display:flex; border-bottom:1px solid var(--gray-100); padding:0 14px; flex-shrink:0; overflow-x:auto; scrollbar-width:none; }
+    .panel-tabs::-webkit-scrollbar { display:none; }
+    .p-tab { display:flex; align-items:center; gap:5px; padding:12px 8px; font-size:11px; font-weight:600; color:var(--gray-500); border-bottom:2px solid transparent; margin-bottom:-1px; cursor:pointer; white-space:nowrap; background:none; border-top:none; border-left:none; border-right:none; transition:all .12s; }
+    .p-tab.active { color:var(--black); border-bottom-color:var(--black); }
+    .tab-dot { width:15px; height:15px; border-radius:50%; border:1.5px solid currentColor; display:flex; align-items:center; justify-content:center; font-size:7px; flex-shrink:0; }
+    .tab-dot.done { background:var(--giant-blue); border-color:var(--giant-blue); color:var(--white); }
+
+    /* Scrollable panel body */
+    .panel-scroll { flex:1; overflow-y:auto; min-height:0; }
+
+    /* Section */
+    .sec { padding:14px 16px; border-bottom:1px solid var(--gray-100); }
+    .sec-lbl { font-size:12px; font-weight:700; letter-spacing:.01em; margin-bottom:10px; }
+
+    /* Paint type rows (Classic / Masking / Gradient) */
+    .paint-row { display:flex; align-items:center; gap:10px; padding:8px 10px; border-radius:5px; cursor:pointer; transition:background .12s; border:1.5px solid transparent; }
+    .paint-row:hover { background:var(--gray-50); }
+    .paint-row.active { background:#EEF0FF; border-color:var(--giant-blue); }
+    .paint-thumb { width:30px; height:30px; border-radius:50%; flex-shrink:0; box-shadow:0 1px 4px rgba(0,0,0,.18); overflow:hidden; position:relative; }
+    .paint-name { font-size:13px; font-weight:500; flex:1; }
+    .paint-price { font-size:11px; color:var(--orange); font-weight:600; }
+    .paint-radio { width:16px; height:16px; border-radius:50%; border:1.5px solid var(--gray-300); flex-shrink:0; display:flex; align-items:center; justify-content:center; }
+    .paint-row.active .paint-radio { border-color:var(--giant-blue); background:var(--giant-blue); }
+    .paint-row.active .paint-radio::after { content:''; width:6px; height:6px; border-radius:50%; background:var(--white); }
+
+    /* Finish radios */
+    .radio-row { display:flex; align-items:center; gap:8px; padding:6px 0; cursor:pointer; }
+    .radio-dot { width:16px; height:16px; border-radius:50%; border:1.5px solid var(--gray-300); flex-shrink:0; display:flex; align-items:center; justify-content:center; transition:border-color .12s; }
+    .radio-dot.on { border-color:var(--giant-blue); }
+    .radio-dot.on::after { content:''; width:8px; height:8px; border-radius:50%; background:var(--giant-blue); }
+    .radio-label { font-size:13px; font-weight:500; }
+
+    /* Color swatch rows */
+    .swatch-row { display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-bottom:6px; }
+    .sw { width:26px; height:26px; border-radius:50%; cursor:pointer; background-size:cover; background-position:center; flex-shrink:0; box-shadow:0 1px 3px rgba(0,0,0,.18); transition:transform .1s; border:2px solid transparent; }
+    .sw:hover { transform:scale(1.14); }
+    .sw.sel { border-color:var(--giant-blue); box-shadow:0 0 0 1.5px var(--giant-blue), 0 1px 3px rgba(0,0,0,.18); }
+    .sw-more { width:24px; height:24px; border-radius:50%; border:1.5px solid var(--gray-200); background:var(--white); display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:11px; color:var(--gray-500); flex-shrink:0; transition:all .12s; font-weight:600; }
+    .sw-more:hover { border-color:var(--black); color:var(--black); }
+    .selected-name { font-size:12px; font-weight:600; }
+    .selected-code { font-size:11px; color:var(--gray-500); font-weight:400; margin-left:3px; }
+
+    /* Expanded color grid */
+    .expand-grid { display:none; margin-top:10px; }
+    .expand-grid.open { display:grid; grid-template-columns:repeat(8,1fr); gap:5px; }
+    .eg-sw { width:100%; aspect-ratio:1; border-radius:50%; cursor:pointer; background-size:cover; background-position:center; box-shadow:0 1px 3px rgba(0,0,0,.15); border:2px solid transparent; transition:transform .1s; }
+    .eg-sw:hover { transform:scale(1.12); }
+    .eg-sw.sel { border-color:var(--giant-blue); }
+
+    /* Decal row */
+    .decal-row { display:flex; align-items:center; gap:10px; }
+    .decal-dot { width:26px; height:26px; border-radius:50%; background-size:cover; background-position:center; flex-shrink:0; box-shadow:0 1px 3px rgba(0,0,0,.18); }
+    .decal-info { flex:1; }
+    .decal-name-txt { font-size:12px; font-weight:600; }
+    .decal-sub { font-size:10px; color:var(--gray-500); }
+    .decal-edit { font-size:11px; color:var(--giant-blue); cursor:pointer; font-weight:600; text-decoration:underline; text-underline-offset:2px; }
+
+    /* Price bar */
+    .price-bar { border-top:1px solid var(--gray-100); padding:14px 16px 16px; flex-shrink:0; }
+    .price-main { font-size:22px; font-weight:800; letter-spacing:-.02em; margin-bottom:2px; }
+    .price-note { font-size:10px; color:var(--gray-500); margin-bottom:14px; }
+    .price-actions { display:flex; align-items:center; gap:8px; }
+    .btn-back-circle { width:40px; height:40px; border-radius:50%; background:var(--giant-blue); color:var(--white); border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; transition:opacity .15s; }
+    .btn-back-circle:hover { opacity:.82; }
+    .btn-next { flex:1; height:40px; background:var(--giant-blue); color:var(--white); border:none; border-radius:3px; font-size:12px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; cursor:pointer; transition:opacity .15s; }
+    .btn-next:hover { opacity:.82; }
+  </style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════
+     LANDING SCREEN
+════════════════════════════════════ -->
+<div id="s-landing" class="screen active">
+  <nav class="site-nav">
+    <div class="nav-left">
+      <button class="nav-hamburger">&#9776;</button>
+      <button class="nav-link">Bikes</button>
+      <button class="nav-link">Gear</button>
+      <button class="nav-link">Discover</button>
+      <button class="nav-link">Sale</button>
+      <button class="nav-link">Find a store</button>
+    </div>
+    <div class="nav-center">
+      <img src="images/Giant_logo.svg" alt="Giant">
+    </div>
+    <div class="nav-right">
+      <button class="nav-icon" title="Search">&#128269;</button>
+      <button class="nav-icon" title="Account">&#128100;</button>
+      <button class="nav-icon" title="Cart">&#128722;</button>
+    </div>
+  </nav>
+
+  <div class="hero">
+    <img class="hero-bg" src="images/MY27_Propel_Advanced_SL_0_ColorA_Action_Mtns_WebRes_31.jpg" alt="">
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+      <div class="hero-eyebrow">Custom Paint Program &middot; 2027 Collection</div>
+      <h1 class="hero-title">Your Bike.<br>Your Color.</h1>
+      <p class="hero-sub">Ride in silence. Turn heads everywhere. 46 precision-crafted finishes — from race-clean solids to multi-layer Elite Paints that shift with every angle of light. Your Propel, unmistakably yours.</p>
+      <div class="hero-actions">
+        <button class="btn-cta" onclick="goto('s-customizer')">Configure Frame Color &rarr;</button>
+        <button class="btn-outline-hero" onclick="window.location='ai-color-match.html'"><span>&#10022;</span> AI Color Match</button>
+      </div>
+    </div>
+    <div class="hero-chips" id="heroChips"></div>
+    <div class="hero-stats">
+      <div class="stat-item"><span class="stat-val">46</span><span class="stat-lbl">Colors Available</span></div>
+      <div class="stat-item"><span class="stat-val">4</span><span class="stat-lbl">Max Paint Layers</span></div>
+      <div class="stat-item"><span class="stat-val">2</span><span class="stat-lbl">Finish Options</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════
+     CUSTOMIZER SCREEN
+════════════════════════════════════ -->
+<div id="s-customizer" class="screen">
+  <nav class="site-nav">
+    <div class="nav-left">
+      <button class="nav-hamburger">&#9776;</button>
+      <button class="nav-link">Bikes</button>
+      <button class="nav-link">Gear</button>
+      <button class="nav-link">Discover</button>
+      <button class="nav-link">Sale</button>
+      <button class="nav-link" onclick="goto('s-landing')" style="color:var(--gray-600);">&#8592; Back</button>
+    </div>
+    <div class="nav-center">
+      <img src="images/Giant_logo.svg" alt="Giant">
+    </div>
+    <div class="nav-right">
+      <button class="nav-icon" style="font-size:11px;font-weight:700;width:auto;padding:6px 12px;border-radius:4px;background:var(--gray-50);border:1px solid var(--gray-100);" onclick="window.location='ai-color-match.html'">&#10022; AI Color Match</button>
+      <button class="nav-icon" title="Search">&#128269;</button>
+      <button class="nav-icon" title="Account">&#128100;</button>
+      <button class="nav-icon" title="Cart">&#128722;</button>
+    </div>
+  </nav>
+
+  <div class="cust-body">
+
+    <!-- Viewer -->
+    <div class="viewer">
+      <div class="bike-stage">
+        <img id="imgFrame" class="hidden" src="" alt="Frame">
+        <img id="imgLogo"  class="hidden" src="" alt="Logo decal">
+      </div>
+      <div class="viewer-light-toggle" id="lightToggle" onclick="toggleViewerBg()">
+        <span class="tgl-icon">&#9788;</span>
+        <span id="lightLabel">LIGHT</span>
+      </div>
+    </div>
+
+    <!-- Right Panel -->
+    <div class="panel">
+
+      <!-- Tabs -->
+      <div class="panel-tabs">
+        <button class="p-tab" onclick="setTab('groupset',this)">
+          <span class="tab-dot done">&#10003;</span> Groupset
+        </button>
+        <button class="p-tab active" onclick="setTab('design',this)">
+          <span class="tab-dot done">&#10003;</span> Design
+        </button>
+        <button class="p-tab" onclick="setTab('parts',this)">
+          <span class="tab-dot"></span> Parts
+        </button>
+        <button class="p-tab" onclick="setTab('review',this)">
+          <span class="tab-dot"></span> Review
+        </button>
+      </div>
+
+      <!-- Design tab content -->
+      <div class="panel-scroll" id="designTab">
+
+        <!-- Paint Type -->
+        <div class="sec">
+          <div class="paint-row active" onclick="setPaintType('classic',this)">
+            <div class="paint-thumb" id="pt-classic-thumb" style="background:#1A1A1A"></div>
+            <span class="paint-name">Classic</span>
+            <span class="paint-radio"></span>
+          </div>
+          <div class="paint-row" onclick="setPaintType('masking',this)">
+            <div class="paint-thumb" style="background:linear-gradient(135deg,#1A1A1A 50%,#F5F5F5 50%)"></div>
+            <span class="paint-name">Masking</span>
+            <span class="paint-radio"></span>
+          </div>
+          <div class="paint-row" onclick="setPaintType('gradient',this)">
+            <div class="paint-thumb" style="background:linear-gradient(135deg,#E8601A,#1A1A1A)"></div>
+            <span class="paint-name">Gradient</span>
+            <span class="paint-price">+NT$3,000</span>
+            <span class="paint-radio"></span>
+          </div>
+        </div>
+
+        <!-- Finish -->
+        <div class="sec">
+          <div class="sec-lbl">Finish</div>
+          <div class="radio-row" onclick="setFinish('M')">
+            <div class="radio-dot on" id="rd-matte"></div>
+            <span class="radio-label">Matte</span>
+          </div>
+          <div class="radio-row" onclick="setFinish('G')">
+            <div class="radio-dot" id="rd-gloss"></div>
+            <span class="radio-label">Gloss</span>
+          </div>
+        </div>
+
+        <!-- Body color -->
+        <div class="sec">
+          <div class="sec-lbl">Body</div>
+          <div class="swatch-row" id="bodySwatchRow"></div>
+          <div style="margin-top:4px">
+            <span class="selected-name" id="bodyName">—</span>
+            <span class="selected-code" id="bodyCode">—</span>
+          </div>
+          <div class="expand-grid" id="bodyGrid"></div>
+        </div>
+
+        <!-- Logo color -->
+        <div class="sec">
+          <div class="sec-lbl">Logo</div>
+          <div class="swatch-row" id="logoSwatchRow"></div>
+          <div style="margin-top:4px">
+            <span class="selected-name" id="logoName">—</span>
+            <span class="selected-code" id="logoCode">—</span>
+          </div>
+          <div class="expand-grid" id="logoGrid"></div>
+        </div>
+
+        <!-- Decals -->
+        <div class="sec">
+          <div class="sec-lbl">Decals</div>
+          <div class="decal-row">
+            <div class="decal-dot" id="decalDot"></div>
+            <div class="decal-info">
+              <div class="decal-name-txt" id="decalName">—</div>
+              <div class="decal-sub">Decal color</div>
+            </div>
+            <span class="decal-edit" onclick="openLogoExpand()">Edit</span>
+          </div>
+        </div>
+
+      </div><!-- /panel-scroll -->
+
+      <!-- Price bar -->
+      <div class="price-bar">
+        <div class="price-main" id="priceMain">NT$ 160,000</div>
+        <div class="price-note">Price including taxes.</div>
+        <div class="price-actions">
+          <button class="btn-back-circle" onclick="goto('s-landing')" title="Back">&#8592;</button>
+          <button class="btn-next" onclick="saveConfig()">NEXT</button>
+        </div>
+      </div>
+
+    </div><!-- /panel -->
+  </div>
+</div>
+
+<script>
+/* ── Color catalog ── */
+const BASE_PRICE = 160000;
+const COLORS = [
+  {id:'BK-001',name:'Giant Black',        l:2,up:0,   g:'BK'},
+  {id:'BK-002',name:'Black Diamond',       l:2,up:0,   g:'BK'},
+  {id:'BK-003',name:'Rainbow Black',       l:2,up:0,   g:'BK'},
+  {id:'BU-001',name:'Rainbow Blue',        l:4,up:0,   g:'BU'},
+  {id:'BU-002',name:'Galaxy Blue',         l:3,up:0,   g:'BU'},
+  {id:'BU-003',name:'Metal Blue',          l:3,up:0,   g:'BU'},
+  {id:'CL-001',name:'Pandora Planet',      l:2,up:3000,g:'CL'},
+  {id:'CL-002',name:'Sunset',              l:2,up:3000,g:'CL'},
+  {id:'CL-003',name:'Psychedelic Forest',  l:2,up:3000,g:'CL'},
+  {id:'CL-004',name:'Chrysocolla',         l:3,up:3000,g:'CL'},
+  {id:'CL-005',name:'Super Chameleon',     l:2,up:3000,g:'CL'},
+  {id:'CL-006',name:'Interstellar Dust',   l:2,up:3000,g:'CL'},
+  {id:'EP-001',name:'Quick Silver',        l:3,up:6000,g:'EP'},
+  {id:'EP-002',name:'Phantom Red',         l:4,up:6000,g:'EP'},
+  {id:'EP-003',name:'Blazing Orange',      l:4,up:6000,g:'EP'},
+  {id:'EP-004',name:'Bronze Gold',         l:4,up:6000,g:'EP'},
+  {id:'EP-005',name:'Chrome Gold',         l:4,up:6000,g:'EP'},
+  {id:'EP-006',name:'Venom Green',         l:4,up:6000,g:'EP'},
+  {id:'EP-007',name:'Lagoon Blue',         l:4,up:6000,g:'EP'},
+  {id:'EP-008',name:'Ocean Star',          l:4,up:6000,g:'EP'},
+  {id:'EP-009',name:'Stella Purple',       l:4,up:6000,g:'EP'},
+  {id:'EP-010',name:'Electric Rose',       l:4,up:6000,g:'EP'},
+  {id:'GN-001',name:"Robin's Egg Blue",    l:2,up:0,   g:'GN'},
+  {id:'GN-002',name:'Phantom Green',       l:2,up:0,   g:'GN'},
+  {id:'GN-003',name:'Metal Green',         l:3,up:0,   g:'GN'},
+  {id:'GY-001',name:'Ice Silver',          l:2,up:0,   g:'GY'},
+  {id:'GY-002',name:'Brilliant Silver',    l:2,up:0,   g:'GY'},
+  {id:'GY-003',name:'Raw Gray',            l:2,up:0,   g:'GY'},
+  {id:'GY-004',name:'Steel Gray',          l:2,up:0,   g:'GY'},
+  {id:'OG-001',name:'Glory Orange',        l:2,up:0,   g:'OG'},
+  {id:'OG-002',name:'Amber Glow',          l:3,up:0,   g:'OG'},
+  {id:'PP-001',name:'Twilight Mauve',      l:2,up:0,   g:'PP'},
+  {id:'RD-001',name:'Hot Pink',            l:2,up:0,   g:'RD'},
+  {id:'RD-002',name:'Ruby Red',            l:3,up:0,   g:'RD'},
+  {id:'RD-003',name:'Rose Gold',           l:2,up:0,   g:'RD'},
+  {id:'RD-004',name:'Rosa Pink',           l:2,up:0,   g:'RD'},
+  {id:'SD-001',name:'Poseidon',            l:3,up:3000,g:'SD'},
+  {id:'SD-002',name:'Forest Camouflage',   l:3,up:3000,g:'SD'},
+  {id:'SD-003',name:'Ancient Ink',         l:3,up:3000,g:'SD'},
+  {id:'SD-004',name:'Dracula',             l:4,up:3000,g:'SD'},
+  {id:'SD-005',name:'Ice Crystal',         l:3,up:3000,g:'SD'},
+  {id:'WT-001',name:'Giant White',         l:2,up:0,   g:'WT'},
+  {id:'WT-002',name:'Unicorn White',       l:3,up:0,   g:'WT'},
+  {id:'WT-003',name:'Glimmer Ghost Violet',l:3,up:0,   g:'WT'},
+  {id:'YL-001',name:'Rainbow Gold',        l:4,up:0,   g:'YL'},
+  {id:'YL-002',name:'Lemon Yellow',        l:2,up:0,   g:'YL'},
+];
+
+function swatchSrc(c){ return `color swatch/${c.id.toLowerCase()}_${c.l}.jpg`; }
+function frameSrc(c,f){ return `images/Frame_ADSL/propel_adsl_2027_00_full-frame_${c.id}_${c.l}_${f}.png`; }
+function logoSrc(c,f){ return `images/Decal-LOGO Type 1.3/propel_2027_00_logo_${c.id.toLowerCase()}_${c.l}_${f.toLowerCase()}.png`; }
+
+/* State */
+let sel = { bodyId:'WT-001', logoId:'BK-001', finish:'M', paintType:'classic', viewerLight:true };
+let bodyExpanded = false, logoExpanded = false;
+const PREVIEW_COUNT = 7;
+
+function body(){ return COLORS.find(c=>c.id===sel.bodyId); }
+function logo(){ return COLORS.find(c=>c.id===sel.logoId); }
+
+/* ── Viewer update ── */
+function updateViewer(){
+  const bc=body(), lc=logo();
+  const fi=document.getElementById('imgFrame');
+  const li=document.getElementById('imgLogo');
+  fi.classList.add('hidden'); li.classList.add('hidden');
+  let n=0;
+  const onLoad=()=>{ if(++n>=2){ fi.classList.remove('hidden'); li.classList.remove('hidden'); } };
+  fi.onload=onLoad; li.onload=onLoad;
+  fi.onerror=()=>{ fi.classList.remove('hidden'); onLoad(); };
+  li.onerror=()=>{ li.classList.remove('hidden'); onLoad(); };
+  fi.src=frameSrc(bc,sel.finish); li.src=logoSrc(lc,sel.finish);
+  updatePanel();
+}
+
+/* ── Panel labels ── */
+function updatePanel(){
+  const bc=body(), lc=logo();
+  document.getElementById('bodyName').textContent=bc.name;
+  document.getElementById('bodyCode').textContent=bc.id;
+  document.getElementById('logoName').textContent=lc.name;
+  document.getElementById('logoCode').textContent=lc.id;
+  document.getElementById('decalName').textContent=lc.name;
+  const decalDot=document.getElementById('decalDot');
+  decalDot.style.backgroundImage=`url('${swatchSrc(lc)}')`;
+  const total=BASE_PRICE+bc.up+lc.up;
+  document.getElementById('priceMain').textContent=`NT$ ${total.toLocaleString()}`;
+  // Classic paint type thumb uses body color swatch
+  document.getElementById('pt-classic-thumb').style.backgroundImage=`url('${swatchSrc(bc)}')`;
+  document.getElementById('pt-classic-thumb').style.backgroundSize='cover';
+}
+
+/* ── Build swatch rows ── */
+function buildSwatchRow(containerId, gridId, selectedId, onSelect){
+  const row = document.getElementById(containerId);
+  const grid = document.getElementById(gridId);
+  const preview = COLORS.slice(0, PREVIEW_COUNT);
+
+  row.innerHTML = preview.map(c=>`
+    <div class="sw${c.id===selectedId?' sel':''}"
+         style="background-image:url('${swatchSrc(c)}')"
+         title="${c.name}"
+         onclick="${onSelect}('${c.id}')"></div>
+  `).join('') + `<div class="sw-more" onclick="toggleExpand('${gridId}')" title="See all colors">&#8250;</div>`;
+
+  grid.innerHTML = COLORS.map(c=>`
+    <div class="eg-sw${c.id===selectedId?' sel':''}"
+         style="background-image:url('${swatchSrc(c)}')"
+         title="${c.name} (${c.id})"
+         onclick="${onSelect}('${c.id}');collapseExpand('${gridId}')"></div>
+  `).join('');
+}
+
+function toggleExpand(gridId){
+  const g=document.getElementById(gridId);
+  const opening=!g.classList.contains('open');
+  g.classList.toggle('open');
+  // Update the ">" button direction
+  const row = g.previousElementSibling.previousElementSibling;
+  if(row){
+    const btn=row.querySelector('.sw-more');
+    if(btn) btn.innerHTML = opening ? '&#8249;' : '&#8250;';
+  }
+}
+function collapseExpand(gridId){
+  const g=document.getElementById(gridId);
+  g.classList.remove('open');
+  const row=g.previousElementSibling.previousElementSibling;
+  if(row){ const btn=row.querySelector('.sw-more'); if(btn) btn.innerHTML='&#8250;'; }
+}
+function openLogoExpand(){ toggleExpand('logoGrid'); }
+
+function renderSwatches(){
+  buildSwatchRow('bodySwatchRow','bodyGrid',sel.bodyId,'pickBody');
+  buildSwatchRow('logoSwatchRow','logoGrid',sel.logoId,'pickLogo');
+}
+
+/* ── Actions ── */
+function pickBody(id){ sel.bodyId=id; renderSwatches(); updateViewer(); }
+function pickLogo(id){ sel.logoId=id; renderSwatches(); updateViewer(); }
+
+function setFinish(f){
+  sel.finish=f;
+  document.getElementById('rd-matte').className='radio-dot'+(f==='M'?' on':'');
+  document.getElementById('rd-gloss').className='radio-dot'+(f==='G'?' on':'');
+  updateViewer();
+}
+
+function setPaintType(type, el){
+  sel.paintType=type;
+  document.querySelectorAll('.paint-row').forEach(r=>r.classList.remove('active'));
+  el.classList.add('active');
+  if(type==='gradient'){
+    const total=BASE_PRICE+body().up+logo().up+3000;
+    document.getElementById('priceMain').textContent=`NT$ ${total.toLocaleString()}`;
+  } else { updatePanel(); }
+}
+
+function setTab(name, el){
+  document.querySelectorAll('.p-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function toggleViewerBg(){
+  sel.viewerLight=!sel.viewerLight;
+  const v=document.querySelector('.viewer');
+  v.style.background=sel.viewerLight?'var(--viewer-bg)':'#1E1E1E';
+  document.getElementById('lightLabel').textContent=sel.viewerLight?'LIGHT':'DARK';
+  document.querySelector('.viewer-light-toggle').style.background=
+    sel.viewerLight?'rgba(255,255,255,.85)':'rgba(50,50,50,.85)';
+  document.querySelector('.viewer-light-toggle').style.color=
+    sel.viewerLight?'var(--black)':'var(--white)';
+}
+
+function goto(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function saveConfig(){
+  const bc=body(),lc=logo();
+  const grad=sel.paintType==='gradient'?3000:0;
+  const total=BASE_PRICE+bc.up+lc.up+grad;
+  alert(`✓ Configuration saved!\n\nPropel Advanced SL 0 Disc — MY2027\nBody:   ${bc.name} (${bc.id})\nLogo:   ${lc.name} (${lc.id})\nFinish: ${sel.finish==='M'?'Matte':'Gloss'}\nPaint:  ${sel.paintType.charAt(0).toUpperCase()+sel.paintType.slice(1)}\nTotal:  NT$ ${total.toLocaleString()}`);
+}
+
+/* ── Landing hero chips ── */
+function renderHeroChips(){
+  const featured=['EP-003','EP-005','EP-009','EP-007','CL-001','CL-002','SD-001','SD-005','OG-001','RD-002','BU-003','GY-002'];
+  const rows=[featured.slice(0,4),featured.slice(4,8),featured.slice(8,12)];
+  const el=document.getElementById('heroChips');
+  if(!el) return;
+  el.innerHTML=rows.map(row=>`<div class="hero-chip-row">${row.map(id=>{
+    const c=COLORS.find(x=>x.id===id); if(!c)return '';
+    return `<div class="hero-chip" title="${c.name}" style="background-image:url('${swatchSrc(c)}')" onclick="pickBody('${c.id}');goto('s-customizer')"></div>`;
+  }).join('')}</div>`).join('');
+}
+
+/* ── Init ── */
+renderHeroChips();
+renderSwatches();
+updateViewer();
+setFinish('M'); // default matte
+</script>
+</body>
+</html>

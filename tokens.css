@@ -1,0 +1,151 @@
+/**
+ * Giant Bike Customization — Design Tokens (CSS Custom Properties)
+ * Source: Bike Customization.pdf  |  Generated: 2026-04-29
+ * Design canvas: 1440 × variable px
+ * ─────────────────────────────────────────────────────────────────
+ */
+
+:root {
+
+  /* ── Colors: Base ── */
+  --color-black:          #000000;
+  --color-white:          #FFFFFF;
+  --color-gray-50:        #F2F2F2;   /* page / panel bg  (PDF grayscale 0.950) */
+  --color-gray-100:       #E5E5E5;   /* dividers / subtle borders              */
+  --color-gray-300:       #B0B0B0;   /* disabled / placeholder                 */
+  --color-gray-500:       #8D8D8D;   /* secondary labels  (PDF 0.553)          */
+  --color-gray-600:       #6E6E6E;   /* inactive tabs / captions (PDF 0.431)   */
+  --color-gray-900:       #090909;   /* dark sidebar bg   (PDF 0.033)          */
+
+  /* ── Colors: Paint Palette ── */
+  --color-paint-giant-white:      #F5F5F5;   /* WT-001 */
+  --color-paint-giant-black:      #1A1A1A;   /* BK-001 */
+  --color-paint-brilliant-silver: #C0C0C0;
+  --color-paint-glory-orange:     #E8601A;
+  --color-paint-ice-crystal:      #D4EAF7;
+  --color-paint-metal-blue:       #3A6EA5;
+
+  /* ── Colors: Semantic ── */
+  --color-bg-page:        var(--color-white);
+  --color-bg-panel:       var(--color-gray-50);
+  --color-bg-sidebar:     var(--color-gray-900);
+  --color-text-primary:   var(--color-black);
+  --color-text-secondary: var(--color-gray-600);
+  --color-text-on-dark:   var(--color-white);
+  --color-border:         var(--color-gray-100);
+  --color-border-active:  var(--color-black);
+  --color-accent:         var(--color-black);
+
+  /* ── Typography ── */
+  --font-family-sans:   'Inter', 'Helvetica Neue', Arial, sans-serif;
+
+  --font-size-xs:   10px;
+  --font-size-sm:   12px;
+  --font-size-md:   14px;
+  --font-size-base: 15px;
+  --font-size-lg:   16px;
+  --font-size-xl:   18px;
+  --font-size-2xl:  20px;
+  --font-size-3xl:  24px;
+  --font-size-hero: 48px;
+
+  --font-weight-regular:  400;
+  --font-weight-medium:   500;
+  --font-weight-semibold: 600;
+  --font-weight-bold:     700;
+
+  --line-height-tight:   1.2;
+  --line-height-normal:  1.5;
+  --line-height-relaxed: 1.7;
+
+  /* ── Spacing ── */
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  20px;
+  --space-6:  24px;
+  --space-8:  32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-14: 56px;
+  --space-16: 64px;
+  --space-20: 80px;
+  --space-nav: 88px;         /* nav horizontal padding          */
+  --space-sidebar: 400px;    /* right customizer sidebar width  */
+
+  /* ── Border Radius ── */
+  --radius-none: 0px;
+  --radius-sm:   4px;
+  --radius-md:   8px;
+  --radius-lg:   12px;
+  --radius-full: 9999px;
+
+  /* ── Shadows ── */
+  --shadow-panel: 0 2px 8px rgba(0,0,0,0.08);
+  --shadow-card:  0 1px 4px rgba(0,0,0,0.06);
+
+  /* ── Breakpoints (reference only — use in @media queries) ── */
+  /* sm: 640px | md: 768px | lg: 1024px | xl: 1280px | 2xl: 1440px */
+
+  /* ── Components: Navigation ── */
+  --nav-height:      56px;
+  --nav-padding-x:   88px;
+  --nav-bg:          var(--color-white);
+  --nav-border:      1px solid var(--color-border);
+
+  /* ── Components: Tabs ── */
+  --tab-font-size:       var(--font-size-md);
+  --tab-padding-x:       var(--space-4);
+  --tab-padding-y:       var(--space-2);
+  --tab-color-active:    var(--color-black);
+  --tab-color-inactive:  var(--color-gray-500);
+  --tab-border-active:   2px solid var(--color-black);
+
+  /* ── Components: Buttons ── */
+  --btn-primary-bg:       var(--color-black);
+  --btn-primary-color:    var(--color-white);
+  --btn-primary-padding:  var(--space-3) var(--space-6);
+  --btn-primary-radius:   var(--radius-sm);
+  --btn-primary-font:     var(--font-size-md);
+  --btn-primary-weight:   var(--font-weight-semibold);
+
+  --btn-secondary-bg:     transparent;
+  --btn-secondary-color:  var(--color-black);
+  --btn-secondary-border: 1px solid var(--color-black);
+
+  /* ── Components: Option / Radio Cards ── */
+  --option-gap:            var(--space-2);
+  --option-radius:         var(--radius-sm);
+  --option-border:         1px solid var(--color-border);
+  --option-border-active:  1px solid var(--color-black);
+  --option-bg:             var(--color-white);
+  --option-padding:        var(--space-3);
+
+  /* ── Components: Price Bar ── */
+  --price-bar-bg:        var(--color-white);
+  --price-bar-border:    1px solid var(--color-border);
+  --price-bar-padding:   var(--space-4) var(--space-6);
+  --price-font-size:     var(--font-size-2xl);
+  --price-font-weight:   var(--font-weight-bold);
+
+  /* ── Components: Color Swatch ── */
+  --swatch-size:          32px;
+  --swatch-radius:        50%;
+  --swatch-border-active: 2px solid var(--color-black);
+  --swatch-gap:           var(--space-2);
+
+  /* ── Components: Step Indicator ── */
+  --step-dot-size:     8px;
+  --step-dot-active:   var(--color-black);
+  --step-dot-inactive: var(--color-gray-300);
+}
+
+/* ── Utility: Dark Surface Override ── */
+.surface-dark {
+  --color-text-primary:   var(--color-white);
+  --color-text-secondary: var(--color-gray-300);
+  --color-border:         rgba(255,255,255,0.15);
+  background-color:       var(--color-bg-sidebar);
+  color:                  var(--color-text-on-dark);
+}

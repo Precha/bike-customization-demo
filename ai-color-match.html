@@ -1,0 +1,1335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Color Match — Giant Custom Paint Program</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ── Reset & Tokens ────────────────────────────────────── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --black:#000;--white:#fff;
+  --gray-50:#F2F2F2;--gray-100:#E5E5E5;--gray-200:#D0D0D0;
+  --gray-400:#9A9A9A;--gray-600:#6E6E6E;--gray-900:#111;
+  --orange:#E8601A;--blue:#3A6EA5;--ice:#D4EAF7;
+  --silver:#C0C0C0;--g-white:#F5F5F5;--g-black:#1A1A1A;
+  --green:#639922;--pink:#993556;
+  --radius-sm:3px;--radius-md:5px;--radius-lg:8px;--radius-full:999px;
+  --giant-blue:#06038D;
+  --nav-h:80px;
+  --ease:cubic-bezier(.4,0,.2,1);
+  --dur:.28s;
+}
+body{font-family:'Inter','Helvetica Neue',Arial,sans-serif;-webkit-font-smoothing:antialiased;background:var(--white);color:var(--black);min-height:100vh;overflow-x:hidden}
+button{cursor:pointer;font-family:inherit;border:none;background:none}
+input{font-family:inherit}
+svg{display:block}
+
+/* ── Screen router ─────────────────────────────────────── */
+.screen{display:none;min-height:100vh;flex-direction:column;animation:fadeUp var(--dur) var(--ease) both}
+.screen.active{display:flex}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+
+/* ── Site Nav (shared, matches bike-customizer) ─────────── */
+.site-nav{
+  position:sticky;top:0;z-index:50;
+  height:var(--nav-h);background:var(--white);border-bottom:1px solid var(--gray-100);
+  display:grid;grid-template-columns:1fr auto 1fr;align-items:center;
+  padding:0 20px;flex-shrink:0;
+}
+.nav-left{display:flex;align-items:center;gap:2px;}
+.nav-hamburger{width:36px;height:36px;display:flex;align-items:center;justify-content:center;background:none;border:none;cursor:pointer;font-size:18px;color:var(--black);border-radius:4px;transition:background .12s;}
+.nav-hamburger:hover{background:var(--gray-50);}
+.nav-link{font-size:13px;font-weight:500;color:var(--black);padding:8px 10px;background:none;border:none;cursor:pointer;white-space:nowrap;border-radius:4px;transition:background .12s;}
+.nav-link:hover{background:var(--gray-50);}
+.nav-center{display:flex;justify-content:center;align-items:center;}
+.nav-center img{height:60px;}
+.nav-right{display:flex;align-items:center;justify-content:flex-end;gap:4px;}
+.nav-icon{width:36px;height:36px;display:flex;align-items:center;justify-content:center;background:none;border:none;cursor:pointer;font-size:16px;color:var(--black);border-radius:4px;transition:background .12s;}
+.nav-icon:hover{background:var(--gray-50);}
+/* Back strip below nav for inner screens */
+.page-back{display:flex;align-items:center;justify-content:space-between;padding:10px 0 4px;margin-bottom:4px;}
+.btn-back-link{font-size:13px;font-weight:600;color:var(--gray-600);display:inline-flex;align-items:center;gap:5px;padding:5px 0;background:none;border:none;cursor:pointer;border-radius:3px;transition:color .15s;}
+.btn-back-link:hover{color:var(--black);}
+.nav-step{font-size:11px;font-weight:600;color:var(--gray-400);letter-spacing:.05em;}
+
+/* ── Buttons ───────────────────────────────────────────── */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:0 20px;height:44px;border-radius:3px;font-size:13px;font-weight:700;letter-spacing:.04em;transition:all .18s;white-space:nowrap}
+.btn-primary{background:var(--black);color:var(--white)}
+.btn-primary:hover{opacity:.82}
+.btn-primary:disabled{background:var(--gray-200);color:var(--gray-400);cursor:not-allowed}
+.btn-outline{background:var(--white);color:var(--black);border:1px solid var(--gray-200)}
+.btn-outline:hover{border-color:var(--black)}
+.btn-ghost{color:var(--gray-600)}
+.btn-ghost:hover{color:var(--black)}
+.btn-lg{height:50px;font-size:13px;padding:0 28px;border-radius:3px;text-transform:uppercase;}
+.btn-full{width:100%}
+
+/* ── Cards ─────────────────────────────────────────────── */
+.card{background:var(--white);border-radius:4px;border:1px solid var(--gray-100)}
+
+/* ── Page container ────────────────────────────────────── */
+.page{flex:1;max-width:600px;margin:0 auto;padding:32px 20px 48px;width:100%}
+.page-title{font-size:20px;font-weight:800;letter-spacing:-.02em;margin-bottom:6px}
+.page-sub{font-size:14px;color:var(--gray-600);line-height:1.6;margin-bottom:28px}
+
+/* ── Section label ─────────────────────────────────────── */
+.lbl{font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--gray-400);margin-bottom:10px}
+
+/* ════════════════════════════════════════════════════════
+   SCREEN 0 — ENTRY
+═══════════════════════════════════════════════════════ */
+#s-entry .hero{
+  padding:64px 32px 44px;text-align:center;background:var(--white);
+  border-bottom:1px solid var(--gray-100);
+}
+#s-entry .hero h1{font-size:clamp(28px,5vw,42px);font-weight:800;line-height:1.1;letter-spacing:-.03em;margin-bottom:14px}
+#s-entry .hero p{font-size:15px;color:var(--gray-600);max-width:380px;margin:0 auto 32px;line-height:1.7}
+.entry-cards{display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:600px;margin:0 auto;padding:0 20px 60px}
+.entry-card{
+  padding:28px 20px 24px;background:var(--white);border-radius:4px;
+  border:1px solid var(--gray-100);cursor:pointer;transition:border-color .18s,transform .18s;
+  display:flex;flex-direction:column;gap:12px;text-align:left;
+}
+.entry-card:hover{border-color:var(--black);transform:translateY(-2px)}
+.entry-card-icon{
+  width:44px;height:44px;border-radius:var(--radius-md);
+  display:flex;align-items:center;justify-content:center;font-size:20px;
+}
+.entry-card h3{font-size:15px;font-weight:700}
+.entry-card p{font-size:13px;color:var(--gray-600);line-height:1.55}
+.entry-card .badge{font-size:11px;font-weight:600;padding:3px 10px;border-radius:var(--radius-full);width:fit-content}
+
+/* ════════════════════════════════════════════════════════
+   SCREEN 1A — COLOR PICKER
+═══════════════════════════════════════════════════════ */
+.color-wheel-wrap{
+  position:relative;width:200px;height:200px;margin:0 auto 24px;cursor:crosshair;
+}
+#hueCanvas{border-radius:50%;display:block}
+.wheel-cursor{
+  position:absolute;width:18px;height:18px;border-radius:50%;border:2.5px solid var(--white);
+  box-shadow:0 0 0 1.5px rgba(0,0,0,.3);pointer-events:none;transform:translate(-50%,-50%);
+  transition:background .05s;
+}
+
+.presets{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px}
+.preset-sw{
+  width:32px;height:32px;border-radius:50%;cursor:pointer;border:2px solid transparent;
+  transition:transform .15s,border-color .15s;flex-shrink:0;position:relative;
+}
+.preset-sw:hover{transform:scale(1.15)}
+.preset-sw.active::after{
+  content:'';position:absolute;inset:-4px;border-radius:50%;border:2px solid var(--black);
+}
+
+.slots{display:flex;gap:10px;margin-bottom:24px}
+.slot{
+  flex:1;height:60px;border-radius:var(--radius-md);border:1.5px dashed var(--gray-200);
+  display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;
+  cursor:pointer;transition:border-color .15s;
+}
+.slot:hover{border-color:var(--gray-400)}
+.slot.filled{border-style:solid;border-color:transparent}
+.slot-empty-txt{font-size:12px;color:var(--gray-400)}
+.slot-name{position:absolute;bottom:5px;left:0;right:0;text-align:center;font-size:10px;font-weight:600;color:rgba(255,255,255,.9)}
+.slot-name.dark{color:rgba(0,0,0,.5)}
+.slot-del{
+  position:absolute;top:4px;right:4px;width:16px;height:16px;border-radius:50%;
+  background:rgba(0,0,0,.3);color:var(--white);font-size:9px;display:none;
+  align-items:center;justify-content:center;line-height:1;
+}
+.slot.filled:hover .slot-del{display:flex}
+
+.mood-tags{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:28px}
+.mood-tag{
+  padding:5px 14px;border-radius:3px;font-size:12px;font-weight:600;
+  letter-spacing:.03em;
+  border:1px solid var(--gray-200);background:var(--white);color:var(--gray-600);
+  cursor:pointer;transition:all .15s;
+}
+.mood-tag:hover{border-color:var(--black);color:var(--black)}
+.mood-tag.active{background:var(--black);color:var(--white);border-color:var(--black)}
+
+/* ════════════════════════════════════════════════════════
+   SCREEN 1B — PHOTO UPLOAD
+═══════════════════════════════════════════════════════ */
+.drop-zone{
+  border:2px dashed var(--gray-200);border-radius:4px;
+  padding:48px 24px;text-align:center;cursor:pointer;transition:border-color .18s,background .18s;
+  margin-bottom:20px;
+}
+.drop-zone:hover,.drop-zone.drag-over{border-color:var(--black);background:#f9f9f9}
+.drop-icon{
+  width:52px;height:52px;border-radius:var(--radius-md);background:var(--gray-50);
+  border:1px solid var(--gray-100);display:flex;align-items:center;justify-content:center;
+  margin:0 auto 14px;font-size:22px;
+}
+.drop-zone h3{font-size:15px;font-weight:600;margin-bottom:6px}
+.drop-zone p{font-size:13px;color:var(--gray-600)}
+.drop-btn-row{display:flex;gap:10px;justify-content:center;margin-top:16px}
+
+.photo-result-wrap{display:none}
+.photo-preview-box{
+  position:relative;width:100%;padding-top:56.25%;border-radius:var(--radius-md);
+  overflow:hidden;background:var(--gray-100);margin-bottom:16px;
+}
+.photo-preview-box img,.photo-preview-box canvas{
+  position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
+}
+.photo-preview-box canvas{pointer-events:none}
+.pin{
+  position:absolute;width:30px;height:30px;border-radius:50%;border:2.5px solid var(--white);
+  box-shadow:0 1px 6px rgba(0,0,0,.3);cursor:grab;transform:translate(-50%,-50%);
+  transition:transform .1s;display:flex;align-items:center;justify-content:center;
+  font-size:10px;font-weight:700;color:var(--white);
+}
+.pin:active{cursor:grabbing;transform:translate(-50%,-50%) scale(1.15)}
+.pin.dark-label{color:rgba(0,0,0,.6)}
+
+.extracted-swatches{display:flex;gap:10px;margin-bottom:8px}
+.ext-sw{
+  flex:1;border-radius:var(--radius-md);overflow:hidden;
+  border:1px solid var(--gray-100);transition:border-color .15s;
+}
+.ext-sw:hover{border-color:var(--gray-400)}
+.ext-color{height:48px;transition:background .3s}
+.ext-info{padding:8px 10px;display:flex;justify-content:space-between;align-items:center}
+.ext-hex{font-size:11px;font-weight:600;font-family:monospace;color:var(--gray-600)}
+.ext-swap{font-size:11px;color:var(--gray-400);text-decoration:underline;cursor:pointer}
+.ext-swap:hover{color:var(--black)}
+
+/* ════════════════════════════════════════════════════════
+   SCREEN 2 — AI LOADING
+═══════════════════════════════════════════════════════ */
+#s-loading{background:var(--white);align-items:center;justify-content:center}
+.loading-center{text-align:center;padding:40px 24px}
+.spinner-ring{
+  width:72px;height:72px;border-radius:50%;margin:0 auto 32px;
+  border:3px solid var(--gray-100);border-top-color:var(--black);
+  animation:spin .9s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-msg{font-size:17px;font-weight:600;margin-bottom:8px;min-height:28px}
+.loading-sub{font-size:13px;color:var(--gray-600);min-height:20px}
+.loading-colors{display:flex;gap:10px;justify-content:center;margin-top:28px}
+.loading-color-dot{width:20px;height:20px;border-radius:50%;animation:pulse 1.2s ease-in-out infinite}
+.loading-color-dot:nth-child(2){animation-delay:.2s}
+.loading-color-dot:nth-child(3){animation-delay:.4s}
+@keyframes pulse{0%,100%{transform:scale(1);opacity:.6}50%{transform:scale(1.3);opacity:1}}
+
+/* ════════════════════════════════════════════════════════
+   SCREEN 3 — RESULTS
+═══════════════════════════════════════════════════════ */
+.input-summary{
+  display:flex;align-items:center;gap:8px;padding:10px 14px;
+  background:var(--gray-50);border-radius:4px;margin-bottom:24px;
+  border:1px solid var(--gray-100);
+}
+.inp-dot{width:22px;height:22px;border-radius:50%;flex-shrink:0;border:1px solid var(--gray-100)}
+.inp-sep{font-size:12px;color:var(--gray-400)}
+.inp-mood{margin-left:auto;font-size:11px;color:var(--gray-600);background:var(--white);padding:3px 10px;border-radius:var(--radius-full);border:1px solid var(--gray-100)}
+
+.result-cards{display:flex;flex-direction:column;gap:12px;margin-bottom:24px}
+.result-card{
+  border-radius:4px;border:2px solid var(--gray-100);overflow:hidden;
+  cursor:pointer;transition:border-color .18s,box-shadow .18s;
+}
+.result-card:hover{border-color:var(--gray-400)}
+.result-card.active{border-color:var(--black);box-shadow:0 0 0 1px var(--black)}
+.result-preview{
+  height:130px;position:relative;display:flex;align-items:center;justify-content:center;
+  overflow:hidden;
+}
+.result-badge{
+  position:absolute;top:10px;left:10px;font-size:10px;font-weight:700;
+  padding:3px 9px;border-radius:var(--radius-full);letter-spacing:.04em;
+}
+.result-body{padding:14px 16px;display:flex;justify-content:space-between;align-items:center;background:var(--white)}
+.result-name{font-size:14px;font-weight:700;margin-bottom:3px}
+.result-desc{font-size:12px;color:var(--gray-600)}
+.result-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+.res-dots{display:flex;gap:5px}
+.res-dot{width:18px;height:18px;border-radius:50%;border:1px solid var(--gray-100)}
+.match-pct{font-size:11px;font-weight:600;color:var(--gray-600);background:var(--gray-50);padding:2px 8px;border-radius:var(--radius-full)}
+
+/* Bike SVG mini in results */
+.bike-mini{width:140px;height:80px;flex-shrink:0}
+
+/* Regenerate row */
+.regen-row{display:flex;align-items:center;gap:10px;padding:12px 0 0;border-top:1px solid var(--gray-100);margin-bottom:20px}
+.regen-row p{font-size:13px;color:var(--gray-600)}
+.regen-count{font-size:12px;color:var(--gray-400);margin-left:auto}
+
+/* ════════════════════════════════════════════════════════
+   SCREEN 4 — APPLIED
+═══════════════════════════════════════════════════════ */
+#s-applied .applied-hero{
+  background:var(--black);color:var(--white);text-align:center;
+  padding:52px 24px 40px;
+}
+#s-applied .applied-hero h2{font-size:24px;font-weight:700;margin-bottom:8px}
+#s-applied .applied-hero p{font-size:14px;color:rgba(255,255,255,.6);line-height:1.6}
+.applied-preview{
+  max-width:600px;margin:0 auto;padding:28px 20px;
+}
+.applied-bike{
+  background:var(--white);border-radius:4px;border:1px solid var(--gray-100);
+  padding:32px 24px;text-align:center;margin-bottom:20px;
+}
+#appliedBike{width:100%;max-width:420px;margin:0 auto}
+.applied-scheme{
+  display:flex;gap:10px;align-items:center;padding:16px;
+  background:var(--white);border-radius:4px;border:1px solid var(--gray-100);
+  margin-bottom:12px;
+}
+.applied-scheme-name{font-size:14px;font-weight:700;flex:1}
+.applied-scheme-dots{display:flex;gap:6px}
+.applied-scheme-dot{width:22px;height:22px;border-radius:50%;border:1px solid var(--gray-100)}
+.applied-actions{display:flex;gap:10px}
+
+/* ── Step indicator ────────────────────────────────────── */
+.steps{display:flex;align-items:center;gap:0;margin-bottom:28px}
+.step-node{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:500;color:var(--gray-400)}
+.step-node.done{color:var(--gray-400)}
+.step-node.active{color:var(--black)}
+.step-num{width:24px;height:24px;border-radius:50%;border:1.5px solid currentColor;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
+.step-node.done .step-num{background:var(--black);border-color:var(--black);color:var(--white)}
+.step-line{flex:1;height:1px;background:var(--gray-100);margin:0 8px}
+
+/* ── Toast ─────────────────────────────────────────────── */
+#toast{
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);
+  background:var(--black);color:var(--white);padding:10px 20px;border-radius:var(--radius-full);
+  font-size:13px;font-weight:500;z-index:200;transition:transform .3s var(--ease),opacity .3s;
+  opacity:0;white-space:nowrap;
+}
+#toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+
+/* ── Responsive ────────────────────────────────────────── */
+@media(max-width:520px){
+  .entry-cards{grid-template-columns:1fr}
+  .site-nav{padding:0 12px}
+  .nav-link{display:none}
+  .page{padding:24px 16px 40px}
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════
+     SCREEN 0 — ENTRY
+════════════════════════════════════════════════════════ -->
+<section id="s-entry" class="screen active">
+  <nav class="site-nav">
+    <div class="nav-left">
+      <button class="nav-hamburger">&#9776;</button>
+      <button class="nav-link">Bikes</button>
+      <button class="nav-link">Gear</button>
+      <button class="nav-link">Discover</button>
+      <button class="nav-link">Sale</button>
+    </div>
+    <div class="nav-center">
+      <a href="bike-customizer.html"><img src="images/Giant_logo.svg" alt="Giant"></a>
+    </div>
+    <div class="nav-right">
+      <button class="nav-icon">&#128269;</button>
+      <button class="nav-icon">&#128100;</button>
+      <button class="nav-icon">&#128722;</button>
+    </div>
+  </nav>
+
+  <div class="hero">
+    <div style="max-width:600px;margin:0 auto">
+      <div style="display:inline-flex;align-items:center;gap:6px;background:var(--gray-50);border:1px solid var(--gray-100);border-radius:var(--radius-full);padding:5px 14px;font-size:12px;font-weight:600;color:var(--gray-600);letter-spacing:.05em;margin-bottom:20px">
+        ✦ &nbsp;AI Color Assistant
+      </div>
+      <h1 style="font-size:clamp(28px,5vw,44px);font-weight:700;line-height:1.15;letter-spacing:-.5px;margin-bottom:14px">
+        Tell me your taste,<br>I'll build your ride.
+      </h1>
+      <p style="font-size:15px;color:var(--gray-600);max-width:380px;margin:0 auto 36px;line-height:1.7">
+        Pick 3 colors or upload a photo — AI will read your taste and recommend the perfect paint scheme for your bike.
+      </p>
+    </div>
+  </div>
+
+  <div class="entry-cards">
+    <div class="entry-card" onclick="goto('picker')">
+      <div class="entry-card-icon" style="background:#FFF0E8">
+        <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+          <circle cx="11" cy="11" r="10" stroke="#E8601A" stroke-width="1.5"/>
+          <circle cx="11" cy="5"  r="2" fill="#E8601A"/>
+          <circle cx="17" cy="14" r="2" fill="#3A6EA5"/>
+          <circle cx="5"  cy="14" r="2" fill="#639922"/>
+        </svg>
+      </div>
+      <div class="badge" style="background:#FFF0E8;color:#993C1D">Pick Colors</div>
+      <h3>Pick 3 colors you love</h3>
+      <p>Choose from the color wheel or preset swatches, add a vibe tag, and AI will match them instantly</p>
+    </div>
+    <div class="entry-card" onclick="goto('photo')">
+      <div class="entry-card-icon" style="background:#E8F4EE">
+        <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+          <rect x="2" y="5" width="18" height="14" rx="3" stroke="#0F6E56" stroke-width="1.5"/>
+          <circle cx="11" cy="12" r="3.5" stroke="#0F6E56" stroke-width="1.5"/>
+          <path d="M8 5L9.5 3h3L14 5" stroke="#0F6E56" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="badge" style="background:#E8F4EE;color:#085041">Upload Photo</div>
+      <h3>Extract colors from a photo</h3>
+      <p>Upload any photo — AI pulls 3 dominant colors and auto-recommends matching schemes</p>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════
+     SCREEN 1A — COLOR PICKER
+════════════════════════════════════════════════════════ -->
+<section id="s-picker" class="screen">
+  <nav class="site-nav">
+    <div class="nav-left">
+      <button class="nav-hamburger">&#9776;</button>
+      <button class="nav-link">Bikes</button>
+      <button class="nav-link">Gear</button>
+      <button class="nav-link">Discover</button>
+      <button class="nav-link">Sale</button>
+    </div>
+    <div class="nav-center">
+      <a href="bike-customizer.html"><img src="images/Giant_logo.svg" alt="Giant"></a>
+    </div>
+    <div class="nav-right">
+      <button class="nav-icon">&#128269;</button>
+      <button class="nav-icon">&#128100;</button>
+      <button class="nav-icon">&#128722;</button>
+    </div>
+  </nav>
+
+  <div class="page">
+    <div class="page-back">
+      <button class="btn-back-link" onclick="goto('entry')">← Back</button>
+      <span class="nav-step" id="pickerStepLbl">0 / 3 selected</span>
+    </div>
+    <div class="steps">
+      <div class="step-node active" id="step1A"><div class="step-num">1</div><span>Colors</span></div>
+      <div class="step-line"></div>
+      <div class="step-node" id="step2A"><div class="step-num">2</div><span>AI Match</span></div>
+      <div class="step-line"></div>
+      <div class="step-node" id="step3A"><div class="step-num">3</div><span>Schemes</span></div>
+    </div>
+
+    <h2 class="page-title">Pick 3 colors you love</h2>
+    <p class="page-sub">Don't overthink it — AI will find the scheme that matches your taste</p>
+
+    <!-- Hue ring -->
+    <div class="lbl">Color wheel</div>
+    <div class="color-wheel-wrap" id="wheelWrap">
+      <canvas id="hueCanvas" width="200" height="200"></canvas>
+      <div class="wheel-cursor" id="wheelCursor"></div>
+    </div>
+
+    <!-- Brightness slider -->
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:22px">
+      <span style="font-size:12px;color:var(--gray-400)">Dark</span>
+      <input type="range" id="brightness" min="0" max="100" value="70" style="flex:1">
+      <span style="font-size:12px;color:var(--gray-400)">Light</span>
+      <div id="currentColor" style="width:28px;height:28px;border-radius:50%;border:2px solid var(--gray-100);flex-shrink:0"></div>
+    </div>
+
+    <!-- Presets -->
+    <div class="lbl">Giant official colors</div>
+    <div class="presets" id="presets"></div>
+
+    <!-- Slots -->
+    <div class="lbl">Selected colors (up to 3)</div>
+    <div class="slots" id="slots">
+      <div class="slot" id="slot0" data-idx="0"><span class="slot-empty-txt">+ Add</span></div>
+      <div class="slot" id="slot1" data-idx="1"><span class="slot-empty-txt">+ Add</span></div>
+      <div class="slot" id="slot2" data-idx="2"><span class="slot-empty-txt">+ Add</span></div>
+    </div>
+
+    <!-- Mood tags -->
+    <div class="lbl">Vibe tags (optional)</div>
+    <div class="mood-tags" id="moodTags"></div>
+
+    <button class="btn btn-primary btn-lg btn-full" id="pickerNext" onclick="runAI()" disabled>
+      Let AI match colors ✦
+    </button>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════
+     SCREEN 1B — PHOTO UPLOAD
+════════════════════════════════════════════════════════ -->
+<section id="s-photo" class="screen">
+  <nav class="site-nav">
+    <div class="nav-left">
+      <button class="nav-hamburger">&#9776;</button>
+      <button class="nav-link">Bikes</button>
+      <button class="nav-link">Gear</button>
+      <button class="nav-link">Discover</button>
+      <button class="nav-link">Sale</button>
+    </div>
+    <div class="nav-center">
+      <a href="bike-customizer.html"><img src="images/Giant_logo.svg" alt="Giant"></a>
+    </div>
+    <div class="nav-right">
+      <button class="nav-icon">&#128269;</button>
+      <button class="nav-icon">&#128100;</button>
+      <button class="nav-icon">&#128722;</button>
+    </div>
+  </nav>
+
+  <div class="page">
+    <div class="page-back">
+      <button class="btn-back-link" onclick="goto('entry')">← Back</button>
+      <span class="nav-step">Upload Photo</span>
+    </div>
+    <div class="steps">
+      <div class="step-node active"><div class="step-num">1</div><span>Photo</span></div>
+      <div class="step-line"></div>
+      <div class="step-node" id="step2B"><div class="step-num">2</div><span>AI Match</span></div>
+      <div class="step-line"></div>
+      <div class="step-node"><div class="step-num">3</div><span>Schemes</span></div>
+    </div>
+
+    <h2 class="page-title">Upload a photo you love</h2>
+    <p class="page-sub">A landscape, outfit, building — anything that inspires you</p>
+
+    <!-- Drop zone -->
+    <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()"
+         ondragover="event.preventDefault();this.classList.add('drag-over')"
+         ondragleave="this.classList.remove('drag-over')"
+         ondrop="handleDrop(event)">
+      <div class="drop-icon">📷</div>
+      <h3>Drop a photo here</h3>
+      <p>or click to browse (JPG / PNG, max 10 MB)</p>
+      <div class="drop-btn-row">
+        <button class="btn btn-outline" style="height:36px;font-size:13px" onclick="event.stopPropagation();document.getElementById('fileInput').click()">Browse files</button>
+      </div>
+    </div>
+    <input type="file" id="fileInput" accept="image/*" style="display:none" onchange="handleFile(this.files[0])">
+
+    <!-- Photo result -->
+    <div class="photo-result-wrap" id="photoResult">
+      <div class="lbl">Your photo</div>
+      <div class="photo-preview-box" id="photoBox">
+        <img id="photoImg" src="" alt="uploaded photo">
+        <canvas id="photoCanvas" id="photoCanvas"></canvas>
+        <!-- pins injected by JS -->
+      </div>
+      <p style="font-size:12px;color:var(--gray-600);margin-bottom:14px">
+        Drag pins to adjust sample points · click a swatch to replace manually
+      </p>
+      <div class="lbl">3 extracted colors</div>
+      <div class="extracted-swatches" id="extSwatches"></div>
+
+      <div class="mood-tags" id="moodTagsB" style="margin:16px 0 24px"></div>
+
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-outline" style="flex:1" onclick="resetPhoto()">Upload again</button>
+        <button class="btn btn-primary" style="flex:2" onclick="runAI()">Match these 3 colors ✦</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════
+     SCREEN 2 — AI LOADING
+════════════════════════════════════════════════════════ -->
+<section id="s-loading" class="screen">
+  <div class="loading-center">
+    <div class="spinner-ring"></div>
+    <div class="loading-msg" id="loadingMsg">Reading your taste...</div>
+    <div class="loading-sub" id="loadingSub">One moment</div>
+    <div class="loading-colors" id="loadingDots"></div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════
+     SCREEN 3 — RESULTS
+════════════════════════════════════════════════════════ -->
+<section id="s-results" class="screen">
+  <nav class="site-nav">
+    <div class="nav-left">
+      <button class="nav-hamburger">&#9776;</button>
+      <button class="nav-link">Bikes</button>
+      <button class="nav-link">Gear</button>
+      <button class="nav-link">Discover</button>
+      <button class="nav-link">Sale</button>
+    </div>
+    <div class="nav-center">
+      <a href="bike-customizer.html"><img src="images/Giant_logo.svg" alt="Giant"></a>
+    </div>
+    <div class="nav-right">
+      <button class="nav-icon">&#128269;</button>
+      <button class="nav-icon">&#128100;</button>
+      <button class="nav-icon">&#128722;</button>
+    </div>
+  </nav>
+
+  <div class="page">
+    <div class="page-back">
+      <button class="btn-back-link" onclick="goto(state.source||'picker')" id="resultsBackBtn">← Change colors</button>
+      <span class="nav-step">Pick a scheme</span>
+    </div>
+    <div class="steps">
+      <div class="step-node done"><div class="step-num">1</div><span>Colors</span></div>
+      <div class="step-line"></div>
+      <div class="step-node done"><div class="step-num">2</div><span>AI Match</span></div>
+      <div class="step-line"></div>
+      <div class="step-node active"><div class="step-num">3</div><span>Schemes</span></div>
+    </div>
+
+    <h2 class="page-title">AI picked 3 schemes for you</h2>
+    <p class="page-sub">Based on your colors and vibe — pick the one that feels right</p>
+
+    <div class="input-summary" id="inputSummary"></div>
+
+    <div class="result-cards" id="resultCards"></div>
+
+    <div class="regen-row">
+      <p>Not feeling this batch?</p>
+      <button class="btn btn-ghost" onclick="regenResults()" style="font-size:13px">Generate another set ↻</button>
+      <span class="regen-count" id="regenCount">1 set generated</span>
+    </div>
+
+    <button class="btn btn-primary btn-lg btn-full" id="applyBtn" onclick="applyScheme()" disabled>
+      Apply this scheme &amp; customize →
+    </button>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════
+     SCREEN 4 — APPLIED
+════════════════════════════════════════════════════════ -->
+<section id="s-applied" class="screen">
+  <nav class="site-nav">
+    <div class="nav-left">
+      <button class="nav-hamburger">&#9776;</button>
+      <button class="nav-link">Bikes</button>
+      <button class="nav-link">Gear</button>
+      <button class="nav-link">Discover</button>
+      <button class="nav-link">Sale</button>
+    </div>
+    <div class="nav-center">
+      <a href="bike-customizer.html"><img src="images/Giant_logo.svg" alt="Giant"></a>
+    </div>
+    <div class="nav-right">
+      <button class="nav-icon">&#128269;</button>
+      <button class="nav-icon">&#128100;</button>
+      <button class="nav-icon">&#128722;</button>
+    </div>
+  </nav>
+
+  <div class="applied-hero">
+    <div style="font-size:32px;margin-bottom:14px">🎨</div>
+    <h2>Color scheme applied!</h2>
+    <p>Your dream scheme is ready.<br>Jump into the customizer and finish your bike.</p>
+  </div>
+
+  <div class="applied-preview">
+    <div class="applied-bike">
+      <svg id="appliedBike" viewBox="0 0 500 340" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="120" cy="260" r="90" stroke="#CCCCCC" stroke-width="8" fill="none"/>
+        <circle cx="120" cy="260" r="12" fill="#CCCCCC"/>
+        <circle cx="380" cy="260" r="90" stroke="#CCCCCC" stroke-width="8" fill="none"/>
+        <circle cx="380" cy="260" r="12" fill="#CCCCCC"/>
+        <line x1="120" y1="170" x2="120" y2="260" stroke="#ddd" stroke-width="2"/>
+        <line x1="30"  y1="260" x2="120" y2="260" stroke="#ddd" stroke-width="2"/>
+        <line x1="184" y1="196" x2="120" y2="260" stroke="#ddd" stroke-width="2"/>
+        <line x1="380" y1="170" x2="380" y2="260" stroke="#ddd" stroke-width="2"/>
+        <line x1="290" y1="260" x2="380" y2="260" stroke="#ddd" stroke-width="2"/>
+        <line x1="444" y1="196" x2="380" y2="260" stroke="#ddd" stroke-width="2"/>
+        <path id="abFrame" d="M190 240 L240 130 L310 130 L380 240" stroke="#E8601A" stroke-width="9" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        <line id="abSeat" x1="240" y1="130" x2="220" y2="240" stroke="#E8601A" stroke-width="9" stroke-linecap="round"/>
+        <line x1="190" y1="240" x2="380" y2="240" stroke="#E8601A" stroke-width="7" stroke-linecap="round"/>
+        <line id="abFork" x1="310" y1="130" x2="120" y2="240" stroke="#E8601A" stroke-width="8" stroke-linecap="round"/>
+        <line x1="240" y1="130" x2="240" y2="90" stroke="#E8601A" stroke-width="9" stroke-linecap="round"/>
+        <path d="M210 88 Q240 75 270 88" stroke="#1A1A1A" stroke-width="6" fill="none" stroke-linecap="round"/>
+        <line x1="200" y1="130" x2="200" y2="100" stroke="#E8601A" stroke-width="7" stroke-linecap="round"/>
+        <path d="M178 98 Q200 88 222 98" stroke="#1A1A1A" stroke-width="5" fill="none" stroke-linecap="round"/>
+        <circle cx="220" cy="240" r="14" fill="#888"/>
+        <circle cx="220" cy="240" r="28" stroke="#888" stroke-width="4" fill="none"/>
+      </svg>
+      <p style="font-size:12px;color:var(--gray-400);margin-top:14px" id="appliedSchemeName"></p>
+    </div>
+
+    <div class="applied-scheme" id="appliedSchemeInfo"></div>
+
+    <div class="applied-actions">
+      <button class="btn btn-outline" style="flex:1;height:48px" onclick="goto('results')">Change scheme</button>
+      <button class="btn btn-primary" style="flex:2;height:48px" onclick="openCustomizer()">
+        Start customizing →
+      </button>
+    </div>
+    <p style="font-size:12px;color:var(--gray-400);text-align:center;margin-top:14px">Colors will be auto-loaded into the Design tab of the customizer</p>
+  </div>
+</section>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<!-- ══════════════════════════════════════════════════════
+     JAVASCRIPT
+════════════════════════════════════════════════════════ -->
+<script>
+/* ─── State ─────────────────────────────────────────── */
+const state = {
+  source: 'picker',       // 'picker' | 'photo'
+  pickedColors: [],       // [{hex, name}]
+  photoColors: [],        // [{hex}]
+  activeMoods: [],
+  selectedScheme: null,
+  regenCount: 1,
+};
+
+/* ─── Presets ────────────────────────────────────────── */
+const PRESETS = [
+  {hex:'#E8601A',name:'Glory Orange'},
+  {hex:'#D4EAF7',name:'Ice Crystal'},
+  {hex:'#3A6EA5',name:'Metal Blue'},
+  {hex:'#F5F5F5',name:'Giant White',dark:true},
+  {hex:'#1A1A1A',name:'Giant Black'},
+  {hex:'#C0C0C0',name:'Brilliant Silver',dark:true},
+  {hex:'#639922',name:'Forest Green'},
+  {hex:'#993556',name:'Cherry Pink'},
+  {hex:'#BA7517',name:'Amber Gold'},
+  {hex:'#534AB7',name:'Deep Purple'},
+];
+
+const MOODS = ['Speed','Fresh','Bold','Minimal','Natural','Cool','Vivid','Mysterious'];
+
+/* ─── Schemes library (3 sets × 3 schemes) ─────────── */
+const SCHEME_SETS = [
+  [
+    {name:'Blaze Racer',    desc:'Orange body × Matte black mask × White logo',   body:'#E8601A', mask:'#1A1A1A', logo:'#F5F5F5', pct:98, dark:false},
+    {name:'Arctic Explorer',desc:'Ice crystal × Deep sea blue × Black logo',      body:'#D4EAF7', mask:'#3A6EA5', logo:'#1A1A1A', pct:84, dark:true},
+    {name:'White Eagle',    desc:'Pearl white × Orange accent × Silver logo',     body:'#F5F5F5', mask:'#E8601A', logo:'#C0C0C0', pct:76, dark:true},
+  ],
+  [
+    {name:'Midnight Strike', desc:'Deep black × Silver trim × Red logo',          body:'#1A1A1A', mask:'#C0C0C0', logo:'#D85A30', pct:95, dark:false},
+    {name:'Summit Run',      desc:'Forest green × White × Gold logo',             body:'#639922', mask:'#F5F5F5', logo:'#BA7517', pct:88, dark:false},
+    {name:'Matte Purple',    desc:'Deep violet × Ice crystal × Silver logo',      body:'#534AB7', mask:'#D4EAF7', logo:'#C0C0C0', pct:80, dark:false},
+  ],
+  [
+    {name:'Cherry Blossom',  desc:'Blush pink × Pearl white × Silver logo',       body:'#F4C0D1', mask:'#F5F5F5', logo:'#C0C0C0', pct:93, dark:true},
+    {name:'Gold Sprint',     desc:'Amber gold × Black × White logo',              body:'#BA7517', mask:'#1A1A1A', logo:'#F5F5F5', pct:86, dark:false},
+    {name:'Titanium Works',  desc:'Silver × Dark grey × Orange logo',             body:'#C0C0C0', mask:'#444',    logo:'#E8601A', pct:79, dark:true},
+  ],
+];
+
+/* ─── Screen navigation ──────────────────────────────── */
+function goto(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const el = document.getElementById('s-' + id);
+  el.classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+/* ─── Toast ──────────────────────────────────────────── */
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+/* ═══════════════════════════════════════════════════════
+   COLOR WHEEL
+════════════════════════════════════════════════════════ */
+let currentHue = 20, currentSat = 85, currentBri = 70;
+let wheelDragging = false;
+
+function initWheel() {
+  const canvas = document.getElementById('hueCanvas');
+  const ctx = canvas.getContext('2d');
+  const cx = 100, cy = 100, r = 98;
+
+  // Draw hue ring
+  for (let deg = 0; deg < 360; deg++) {
+    const startAngle = (deg - 0.5) * Math.PI / 180;
+    const endAngle   = (deg + 1.5) * Math.PI / 180;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, r, startAngle, endAngle);
+    ctx.closePath();
+    ctx.fillStyle = `hsl(${deg},80%,55%)`;
+    ctx.fill();
+  }
+  // White inner circle
+  ctx.beginPath();
+  ctx.arc(cx, cy, 68, 0, Math.PI * 2);
+  ctx.fillStyle = '#fff';
+  ctx.fill();
+
+  updateWheelCursor();
+  updateCurrentColor();
+}
+
+function updateWheelCursor() {
+  const wrap = document.getElementById('wheelWrap');
+  const cur  = document.getElementById('wheelCursor');
+  const r = 83;
+  const angle = currentHue * Math.PI / 180;
+  const x = 100 + r * Math.cos(angle);
+  const y = 100 + r * Math.sin(angle);
+  cur.style.left  = (x / 200 * 100) + '%';
+  cur.style.top   = (y / 200 * 100) + '%';
+  cur.style.background = `hsl(${currentHue},${currentSat}%,${currentBri}%)`;
+}
+
+function updateCurrentColor() {
+  const hex = hslToHex(currentHue, currentSat, currentBri);
+  document.getElementById('currentColor').style.background = hex;
+  document.getElementById('wheelCursor').style.background = hex;
+}
+
+function hslToHex(h, s, l) {
+  s /= 100; l /= 100;
+  const a = s * Math.min(l, 1 - l);
+  const f = n => { const k = (n + h / 30) % 12; return l - a * Math.max(-1, Math.min(k - 3, 9 - k, 1)); };
+  return '#' + [f(0), f(8), f(4)].map(v => Math.round(v * 255).toString(16).padStart(2, '0')).join('');
+}
+
+function hexToHsl(hex) {
+  let r = parseInt(hex.slice(1,3),16)/255,
+      g = parseInt(hex.slice(3,5),16)/255,
+      b = parseInt(hex.slice(5,7),16)/255;
+  const max=Math.max(r,g,b),min=Math.min(r,g,b),l=(max+min)/2;
+  let h=0,s=0;
+  if(max!==min){const d=max-min;s=l>.5?d/(2-max-min):d/(max+min);switch(max){case r:h=(g-b)/d+(g<b?6:0);break;case g:h=(b-r)/d+2;break;case b:h=(r-g)/d+4;}h*=60;}
+  return{h:Math.round(h),s:Math.round(s*100),l:Math.round(l*100)};
+}
+
+function isLight(hex) {
+  const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
+  return (r*299+g*587+b*114)/1000 > 160;
+}
+
+// Wheel events
+document.getElementById('wheelWrap').addEventListener('mousedown', e => { wheelDragging = true; handleWheelMove(e); });
+document.addEventListener('mousemove', e => { if (wheelDragging) handleWheelMove(e); });
+document.addEventListener('mouseup', () => { wheelDragging = false; });
+document.getElementById('wheelWrap').addEventListener('touchstart', e => { handleWheelMove(e.touches[0]); }, {passive:true});
+document.getElementById('wheelWrap').addEventListener('touchmove', e => { handleWheelMove(e.touches[0]); e.preventDefault(); }, {passive:false});
+
+function handleWheelMove(e) {
+  const rect = document.getElementById('hueCanvas').getBoundingClientRect();
+  const cx = rect.left + rect.width / 2;
+  const cy = rect.top + rect.height / 2;
+  const dx = e.clientX - cx;
+  const dy = e.clientY - cy;
+  const dist = Math.sqrt(dx*dx + dy*dy);
+  if (dist < 20) return;
+  currentHue = ((Math.atan2(dy, dx) * 180 / Math.PI) + 360) % 360;
+  if (wheelDragging) addCurrentColorToSlot();
+  updateWheelCursor();
+  updateCurrentColor();
+}
+
+document.getElementById('brightness').addEventListener('input', function() {
+  currentBri = +this.value;
+  updateCurrentColor();
+});
+
+/* ─── Slots ─────────────────────────────────────────── */
+function addCurrentColorToSlot() {
+  if (state.pickedColors.length >= 3) return;
+  const hex = hslToHex(currentHue, currentSat, currentBri);
+  // Avoid near-duplicate
+  const isDup = state.pickedColors.some(c => colorDist(c.hex, hex) < 25);
+  if (isDup) return;
+  state.pickedColors.push({hex, name: hex.toUpperCase()});
+  renderSlots();
+  updatePickerNext();
+}
+
+function colorDist(a, b) {
+  const ra=parseInt(a.slice(1,3),16),ga=parseInt(a.slice(3,5),16),ba=parseInt(a.slice(5,7),16);
+  const rb=parseInt(b.slice(1,3),16),gb=parseInt(b.slice(3,5),16),bb=parseInt(b.slice(5,7),16);
+  return Math.sqrt((ra-rb)**2+(ga-gb)**2+(ba-bb)**2);
+}
+
+function renderSlots() {
+  for (let i = 0; i < 3; i++) {
+    const slot = document.getElementById('slot' + i);
+    const c = state.pickedColors[i];
+    if (c) {
+      slot.classList.add('filled');
+      slot.style.background = c.hex;
+      slot.style.borderColor = c.hex;
+      const light = isLight(c.hex);
+      slot.innerHTML = `
+        <span class="slot-name ${light?'dark':''}">${c.name}</span>
+        <span class="slot-del" onclick="removeColor(${i},event)">✕</span>`;
+    } else {
+      slot.classList.remove('filled');
+      slot.style.background = '';
+      slot.style.borderColor = '';
+      slot.innerHTML = `<span class="slot-empty-txt">${i < state.pickedColors.length ? '' : '+ Add'}</span>`;
+    }
+  }
+  document.getElementById('pickerStepLbl').textContent = state.pickedColors.length + ' / 3 selected';
+}
+
+function removeColor(i, e) {
+  e.stopPropagation();
+  state.pickedColors.splice(i, 1);
+  renderSlots();
+  updatePickerNext();
+}
+
+function updatePickerNext() {
+  document.getElementById('pickerNext').disabled = state.pickedColors.length < 2;
+}
+
+/* ─── Presets render ─────────────────────────────────── */
+function initPresets() {
+  const wrap = document.getElementById('presets');
+  PRESETS.forEach(p => {
+    const el = document.createElement('div');
+    el.className = 'preset-sw';
+    el.style.background = p.hex;
+    if (p.dark) el.style.border = '2px solid var(--gray-200)';
+    el.title = p.name;
+    el.onclick = () => {
+      if (state.pickedColors.length >= 3) { toast('3 colors max'); return; }
+      const isDup = state.pickedColors.some(c => c.hex === p.hex);
+      if (isDup) { toast('Already added that color'); return; }
+      state.pickedColors.push({hex: p.hex, name: p.name});
+      // Sync wheel
+      const {h,s,l} = hexToHsl(p.hex);
+      currentHue = h; currentSat = s; currentBri = l;
+      document.getElementById('brightness').value = l;
+      updateWheelCursor();
+      updateCurrentColor();
+      renderSlots();
+      updatePickerNext();
+      // Mark active
+      document.querySelectorAll('.preset-sw').forEach(sw => sw.classList.remove('active'));
+      el.classList.add('active');
+    };
+    wrap.appendChild(el);
+  });
+}
+
+/* ─── Mood tags ──────────────────────────────────────── */
+function initMoodTags(containerId) {
+  const wrap = document.getElementById(containerId);
+  MOODS.forEach(m => {
+    const el = document.createElement('button');
+    el.className = 'mood-tag';
+    el.textContent = m;
+    el.onclick = () => {
+      const idx = state.activeMoods.indexOf(m);
+      if (idx > -1) { state.activeMoods.splice(idx, 1); el.classList.remove('active'); }
+      else { state.activeMoods.push(m); el.classList.add('active'); }
+    };
+    wrap.appendChild(el);
+  });
+}
+
+/* ─── Slot click to add ──────────────────────────────── */
+document.getElementById('slots').addEventListener('click', e => {
+  const slot = e.target.closest('.slot');
+  if (!slot) return;
+  const idx = +slot.dataset.idx;
+  if (idx >= state.pickedColors.length) {
+    // Add current wheel color
+    if (state.pickedColors.length >= 3) { toast('3 colors max'); return; }
+    const hex = hslToHex(currentHue, currentSat, currentBri);
+    state.pickedColors.push({hex, name: hex.toUpperCase()});
+    renderSlots();
+    updatePickerNext();
+  }
+});
+
+/* ═══════════════════════════════════════════════════════
+   PHOTO UPLOAD
+════════════════════════════════════════════════════════ */
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('dropZone').classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (file && file.type.startsWith('image/')) handleFile(file);
+}
+
+function handleFile(file) {
+  if (!file) return;
+  if (file.size > 10 * 1024 * 1024) { toast('File too large — please use an image under 10 MB'); return; }
+  const reader = new FileReader();
+  reader.onload = ev => showPhoto(ev.target.result);
+  reader.readAsDataURL(file);
+}
+
+function showPhoto(src) {
+  const img = document.getElementById('photoImg');
+  img.src = src;
+  img.onload = () => {
+    document.getElementById('dropZone').style.display = 'none';
+    document.getElementById('photoResult').style.display = 'block';
+    extractColors(img);
+    renderPins();
+  };
+}
+
+function resetPhoto() {
+  document.getElementById('dropZone').style.display = 'block';
+  document.getElementById('photoResult').style.display = 'none';
+  document.getElementById('photoImg').src = '';
+  state.photoColors = [];
+  document.getElementById('extSwatches').innerHTML = '';
+  document.querySelectorAll('.pin').forEach(p => p.remove());
+}
+
+/* Extract dominant colors from image using canvas sampling */
+const PIN_POS = [{x:.25,y:.3},{x:.6,y:.55},{x:.4,y:.75}];
+let pinPositions = [...PIN_POS];
+
+function extractColors(img) {
+  const canvas = document.createElement('canvas');
+  canvas.width = 80; canvas.height = 45;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(img, 0, 0, 80, 45);
+
+  state.photoColors = PIN_POS.map(p => {
+    const x = Math.floor(p.x * 80);
+    const y = Math.floor(p.y * 45);
+    const d = ctx.getImageData(x, y, 1, 1).data;
+    return {hex: `#${[d[0],d[1],d[2]].map(v=>v.toString(16).padStart(2,'0')).join('')}`};
+  });
+
+  renderExtSwatches();
+}
+
+function renderExtSwatches() {
+  const wrap = document.getElementById('extSwatches');
+  wrap.innerHTML = '';
+  state.photoColors.forEach((c, i) => {
+    const light = isLight(c.hex);
+    wrap.innerHTML += `
+      <div class="ext-sw" id="extSw${i}">
+        <div class="ext-color" id="extColor${i}" style="background:${c.hex}"></div>
+        <div class="ext-info">
+          <span class="ext-hex" id="extHex${i}">${c.hex.toUpperCase()}</span>
+          <span class="ext-swap" onclick="swapExtColor(${i})">Replace</span>
+        </div>
+      </div>`;
+  });
+}
+
+function swapExtColor(i) {
+  // Create a temporary color input
+  const inp = document.createElement('input');
+  inp.type = 'color';
+  inp.value = state.photoColors[i].hex;
+  inp.oninput = () => {
+    state.photoColors[i].hex = inp.value;
+    document.getElementById('extColor'+i).style.background = inp.value;
+    document.getElementById('extHex'+i).textContent = inp.value.toUpperCase();
+    movePinToColor(i);
+  };
+  inp.click();
+}
+
+function renderPins() {
+  document.querySelectorAll('.pin').forEach(p => p.remove());
+  const box = document.getElementById('photoBox');
+  PIN_POS.forEach((p, i) => {
+    const pin = document.createElement('div');
+    pin.className = 'pin';
+    pin.id = 'pin'+i;
+    pin.textContent = i+1;
+    pin.style.left = (p.x*100)+'%';
+    pin.style.top  = (p.y*100)+'%';
+    makePinDraggable(pin, i);
+    box.appendChild(pin);
+  });
+}
+
+function makePinDraggable(pin, i) {
+  let dragging = false, ox, oy;
+  pin.addEventListener('mousedown', e => {
+    dragging = true;
+    const rect = pin.parentElement.getBoundingClientRect();
+    ox = e.clientX - rect.left - (pinPositions[i].x * rect.width);
+    oy = e.clientY - rect.top  - (pinPositions[i].y * rect.height);
+    e.preventDefault();
+  });
+  document.addEventListener('mousemove', e => {
+    if (!dragging) return;
+    const rect = document.getElementById('photoBox').getBoundingClientRect();
+    const nx = Math.max(0, Math.min(1, (e.clientX - rect.left - ox) / rect.width));
+    const ny = Math.max(0, Math.min(1, (e.clientY - rect.top  - oy) / rect.height));
+    pinPositions[i] = {x:nx, y:ny};
+    pin.style.left = (nx*100)+'%';
+    pin.style.top  = (ny*100)+'%';
+    // Re-sample color at new position
+    resampleColor(i, nx, ny);
+  });
+  document.addEventListener('mouseup', () => { dragging = false; });
+  // Touch
+  pin.addEventListener('touchstart', e => {
+    const t = e.touches[0];
+    const rect = pin.parentElement.getBoundingClientRect();
+    ox = t.clientX - rect.left - (pinPositions[i].x * rect.width);
+    oy = t.clientY - rect.top  - (pinPositions[i].y * rect.height);
+  }, {passive:true});
+  pin.addEventListener('touchmove', e => {
+    const t = e.touches[0];
+    const rect = document.getElementById('photoBox').getBoundingClientRect();
+    const nx = Math.max(0, Math.min(1, (t.clientX - rect.left - ox) / rect.width));
+    const ny = Math.max(0, Math.min(1, (t.clientY - rect.top  - oy) / rect.height));
+    pinPositions[i] = {x:nx, y:ny};
+    pin.style.left = (nx*100)+'%';
+    pin.style.top  = (ny*100)+'%';
+    resampleColor(i, nx, ny);
+    e.preventDefault();
+  }, {passive:false});
+}
+
+function resampleColor(i, nx, ny) {
+  const img = document.getElementById('photoImg');
+  const canvas = document.createElement('canvas');
+  canvas.width = img.naturalWidth || 80;
+  canvas.height = img.naturalHeight || 45;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+  const x = Math.floor(nx * canvas.width);
+  const y = Math.floor(ny * canvas.height);
+  const d = ctx.getImageData(x, y, 1, 1).data;
+  const hex = '#' + [d[0],d[1],d[2]].map(v=>v.toString(16).padStart(2,'0')).join('');
+  state.photoColors[i] = {hex};
+  document.getElementById('extColor'+i).style.background = hex;
+  document.getElementById('extHex'+i).textContent = hex.toUpperCase();
+}
+
+function movePinToColor(i) { /* pin stays at current position */ }
+
+/* ═══════════════════════════════════════════════════════
+   AI LOADING
+════════════════════════════════════════════════════════ */
+const LOADING_MSGS = [
+  ['Reading your taste...',           'Consulting a master paint specialist'],
+  ['Querying the color universe...',  'The color oracle is casting runes'],
+  ['Crafting your bike\'s soul...',   'AI just had its third espresso'],
+  ['Comparing 10,000 schemes...',     'Filtering out all the uncool ones'],
+  ['Your destiny palette awaits...',  'Take a deep breath'],
+];
+
+function runAI() {
+  // Collect colors based on source
+  if (state.source === 'photo') {
+    if (state.photoColors.length < 1) { toast('Please upload a photo first'); return; }
+  } else {
+    if (state.pickedColors.length < 2) { toast('Select at least 2 colors'); return; }
+  }
+
+  goto('loading');
+
+  // Animate loading messages
+  const msgs   = document.getElementById('loadingMsg');
+  const subs   = document.getElementById('loadingSub');
+  const dots   = document.getElementById('loadingDots');
+
+  const colors = state.source === 'photo'
+    ? state.photoColors.map(c => c.hex)
+    : state.pickedColors.map(c => c.hex);
+
+  dots.innerHTML = colors.slice(0,3).map(c =>
+    `<div class="loading-color-dot" style="background:${c}"></div>`
+  ).join('');
+
+  let step = 0;
+  const tick = () => {
+    if (step < LOADING_MSGS.length) {
+      msgs.textContent = LOADING_MSGS[step][0];
+      subs.textContent = LOADING_MSGS[step][1];
+      step++;
+    }
+  };
+  tick();
+  const interval = setInterval(tick, 700);
+
+  setTimeout(() => {
+    clearInterval(interval);
+    buildResults();
+    goto('results');
+  }, LOADING_MSGS.length * 700 + 200);
+}
+
+/* ═══════════════════════════════════════════════════════
+   RESULTS
+════════════════════════════════════════════════════════ */
+function buildResults() {
+  const colors = state.source === 'photo'
+    ? state.photoColors.map(c => c.hex)
+    : state.pickedColors.map(c => c.hex);
+
+  // Input summary
+  const summary = document.getElementById('inputSummary');
+  summary.innerHTML = colors.map(c =>
+    `<div class="inp-dot" style="background:${c};border-color:${isLight(c)?'var(--gray-200)':'transparent'}"></div>`
+  ).join('<span class="inp-sep">+</span>')
+  + (state.activeMoods.length ? `<span class="inp-mood">${state.activeMoods.slice(0,2).join(' · ')}</span>` : '');
+
+  renderSchemes(state.regenCount - 1);
+}
+
+function renderSchemes(setIdx) {
+  const schemes = SCHEME_SETS[setIdx % SCHEME_SETS.length];
+  const wrap = document.getElementById('resultCards');
+  wrap.innerHTML = '';
+  state.selectedScheme = null;
+  document.getElementById('applyBtn').disabled = true;
+
+  schemes.forEach((s, i) => {
+    const card = document.createElement('div');
+    card.className = 'result-card';
+    card.innerHTML = `
+      <div class="result-preview" style="background:linear-gradient(125deg,${s.body} 0%,${s.body} 42%,${s.mask} 42%)">
+        ${i===0 ? `<div class="result-badge" style="background:rgba(0,0,0,.55);color:#fff">Best match</div>` : ''}
+        ${bikeSVGMini(s)}
+      </div>
+      <div class="result-body">
+        <div>
+          <div class="result-name">${s.name}</div>
+          <div class="result-desc">${s.desc}</div>
+        </div>
+        <div class="result-right">
+          <div class="res-dots">
+            <div class="res-dot" style="background:${s.body};border-color:${isLight(s.body)?'var(--gray-200)':'transparent'}"></div>
+            <div class="res-dot" style="background:${s.mask};border-color:${isLight(s.mask)?'var(--gray-200)':'transparent'}"></div>
+            <div class="res-dot" style="background:${s.logo};border-color:${isLight(s.logo)?'var(--gray-200)':'transparent'}"></div>
+          </div>
+          <span class="match-pct">${s.pct}% match</span>
+        </div>
+      </div>`;
+    card.onclick = () => selectScheme(card, s);
+    wrap.appendChild(card);
+  });
+}
+
+function bikeSVGMini(s) {
+  return `<svg class="bike-mini" viewBox="0 0 200 120" fill="none">
+    <circle cx="36" cy="92" r="22" stroke="${s.dark?'#555':'rgba(255,255,255,.4)'}" stroke-width="3" fill="none"/>
+    <circle cx="164" cy="92" r="22" stroke="${s.dark?'#555':'rgba(255,255,255,.4)'}" stroke-width="3" fill="none"/>
+    <path d="M56 80 L80 50 L120 50 L144 80" stroke="${s.logo}" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <line x1="80" y1="50" x2="72" y2="88" stroke="${s.logo}" stroke-width="3.5" stroke-linecap="round"/>
+    <line x1="120" y1="50" x2="164" y2="88" stroke="${s.logo}" stroke-width="3.5" stroke-linecap="round"/>
+    <line x1="56" y1="80" x2="164" y2="80" stroke="${s.logo}" stroke-width="3" stroke-linecap="round"/>
+    <line x1="80" y1="50" x2="80" y2="30" stroke="${s.logo}" stroke-width="3.5" stroke-linecap="round"/>
+    <path d="M66 28 Q80 22 94 28" stroke="${s.logo}" stroke-width="3" fill="none" stroke-linecap="round"/>
+  </svg>`;
+}
+
+function selectScheme(card, scheme) {
+  document.querySelectorAll('.result-card').forEach(c => c.classList.remove('active'));
+  card.classList.add('active');
+  state.selectedScheme = scheme;
+  document.getElementById('applyBtn').disabled = false;
+}
+
+function regenResults() {
+  state.regenCount++;
+  document.getElementById('regenCount').textContent = `${state.regenCount} sets generated`;
+  // Quick loading flash
+  goto('loading');
+  document.getElementById('loadingMsg').textContent = 'Summoning new schemes...';
+  document.getElementById('loadingSub').textContent = 'AI inspiration incoming';
+  setTimeout(() => {
+    renderSchemes(state.regenCount - 1);
+    goto('results');
+    toast('Fresh schemes ready!');
+  }, 1000);
+}
+
+/* ═══════════════════════════════════════════════════════
+   APPLY
+════════════════════════════════════════════════════════ */
+function applyScheme() {
+  if (!state.selectedScheme) return;
+  const s = state.selectedScheme;
+
+  // Update big bike SVG
+  const parts = ['abFrame','abSeat','abFork'];
+  parts.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.setAttribute('stroke', s.body);
+  });
+  document.querySelectorAll('#appliedBike line, #appliedBike path').forEach(el => {
+    if (!el.id.startsWith('ab') && el.getAttribute('stroke') && el.getAttribute('stroke') !== 'none') {
+      // Keep wheel color
+    }
+  });
+  // Set frame body
+  document.getElementById('abFrame').setAttribute('stroke', s.body);
+  document.getElementById('abSeat').setAttribute('stroke', s.body);
+  document.getElementById('abFork').setAttribute('stroke', s.body);
+  document.getElementById('appliedSchemeName').textContent = s.name + ' — ' + s.desc;
+
+  // Scheme info bar
+  document.getElementById('appliedSchemeInfo').innerHTML = `
+    <div class="applied-scheme-name">${s.name}</div>
+    <div class="applied-scheme-dots">
+      <div class="applied-scheme-dot" style="background:${s.body};border-color:${isLight(s.body)?'var(--gray-200)':'transparent'}"></div>
+      <div class="applied-scheme-dot" style="background:${s.mask};border-color:${isLight(s.mask)?'var(--gray-200)':'transparent'}"></div>
+      <div class="applied-scheme-dot" style="background:${s.logo};border-color:${isLight(s.logo)?'var(--gray-200)':'transparent'}"></div>
+    </div>`;
+
+  goto('applied');
+}
+
+function openCustomizer() {
+  // Pass scheme via sessionStorage then open
+  if (state.selectedScheme) {
+    try {
+      sessionStorage.setItem('aiScheme', JSON.stringify(state.selectedScheme));
+    } catch(e) {}
+  }
+  // Open bike-customizer if exists, else just toast
+  if (typeof window !== 'undefined') {
+    const link = document.createElement('a');
+    link.href = 'bike-customizer.html';
+    link.click();
+  }
+  toast('Opening customizer...');
+}
+
+/* ═══════════════════════════════════════════════════════
+   INIT
+════════════════════════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded', () => {
+  initWheel();
+  initPresets();
+  initMoodTags('moodTags');
+  initMoodTags('moodTagsB');
+  renderSlots();
+
+  // Slot "add" button — add current wheel color
+  document.querySelectorAll('.slot').forEach(slot => {
+    slot.addEventListener('click', e => {
+      if (e.target.closest('.slot-del')) return;
+      if (!slot.classList.contains('filled') && state.pickedColors.length < 3) {
+        const hex = hslToHex(currentHue, currentSat, currentBri);
+        state.pickedColors.push({hex, name: hex.toUpperCase()});
+        renderSlots();
+        updatePickerNext();
+      }
+    });
+  });
+});
+
+// Set source before runAI
+function goto(id) {
+  if (id === 'picker') state.source = 'picker';
+  if (id === 'photo')  state.source = 'photo';
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const el = document.getElementById('s-' + id);
+  if (el) { el.classList.add('active'); window.scrollTo(0,0); }
+}
+</script>
+</body>
+</html>
