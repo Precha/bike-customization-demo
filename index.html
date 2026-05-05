@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Giant Custom Paint Program</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
+  <style>
+    @font-face { font-family:'Overpass'; src:url('fonts/overpass-regular.ttf') format('truetype'); font-weight:400; }
+    @font-face { font-family:'Overpass'; src:url('fonts/overpass-semibold.ttf') format('truetype'); font-weight:600; }
+    @font-face { font-family:'Overpass'; src:url('fonts/overpass-bold.ttf') format('truetype'); font-weight:700; }
+    @font-face { font-family:'Overpass'; src:url('fonts/overpass-extrabold.ttf') format('truetype'); font-weight:800; }
+
+    *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+    html, body { height:100%; }
+    body {
+      font-family:'Overpass','Helvetica Neue',Arial,sans-serif;
+      -webkit-font-smoothing:antialiased;
+      background:#0a0a0a;
+      color:#fff;
+      display:flex;
+      flex-direction:column;
+    }
+
+    /* NAV */
+    .site-nav {
+      height:80px;
+      background:rgba(6,3,141,.9);
+      backdrop-filter:blur(12px);
+      -webkit-backdrop-filter:blur(12px);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:0 20px;
+      flex-shrink:0;
+    }
+    .site-nav img { height:22px; width:auto; }
+
+    /* MAIN */
+    main {
+      flex:1;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:40px 20px;
+    }
+
+    .login-card {
+      width:100%;
+      max-width:400px;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:32px;
+    }
+
+    .login-eyebrow {
+      font-size:10px;
+      font-weight:700;
+      letter-spacing:.22em;
+      color:rgba(255,255,255,.45);
+      text-transform:uppercase;
+      text-align:center;
+    }
+
+    .login-title {
+      font-size:36px;
+      font-weight:800;
+      letter-spacing:-.02em;
+      text-align:center;
+      line-height:1.1;
+    }
+
+    .login-form {
+      width:100%;
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+
+    .login-input {
+      width:100%;
+      padding:14px 18px;
+      background:rgba(255,255,255,.07);
+      border:1.5px solid rgba(255,255,255,.15);
+      border-radius:8px;
+      color:#fff;
+      font-family:'Overpass',sans-serif;
+      font-size:15px;
+      font-weight:400;
+      outline:none;
+      transition:border-color .2s;
+      letter-spacing:.05em;
+    }
+    .login-input::placeholder { color:rgba(255,255,255,.3); letter-spacing:.05em; }
+    .login-input:focus { border-color:rgba(255,255,255,.45); }
+
+    .login-btn {
+      position:relative;
+      overflow:hidden;
+      width:100%;
+      padding:15px 40px;
+      background:#fff;
+      color:rgb(6,3,141);
+      border:2px solid #fff;
+      border-radius:999px;
+      font-family:'Overpass',sans-serif;
+      font-size:13px;
+      font-weight:800;
+      letter-spacing:.1em;
+      text-transform:uppercase;
+      cursor:pointer;
+      z-index:0;
+      transition:color .35s ease;
+      margin-top:4px;
+    }
+    .login-btn::before {
+      content:'';
+      position:absolute;
+      inset:0;
+      background:rgb(6,3,141);
+      transform:scaleX(0);
+      transform-origin:left center;
+      transition:transform .35s ease;
+      z-index:-1;
+    }
+    .login-btn:hover { color:#fff; }
+    .login-btn:hover::before { transform:scaleX(1); }
+
+    .login-error {
+      font-size:13px;
+      font-weight:600;
+      color:#ff5c5c;
+      text-align:center;
+      min-height:18px;
+      letter-spacing:.02em;
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="site-nav">
+    <img src="images/Giant_Horizontal_Signature_RGB_White.png" alt="Giant">
+  </nav>
+
+  <main>
+    <div class="login-card">
+      <p class="login-eyebrow">Giant Custom Paint Program</p>
+      <h1 class="login-title">Enter Access Password</h1>
+      <form class="login-form" id="loginForm">
+        <input
+          class="login-input"
+          type="password"
+          id="passwordInput"
+          placeholder="Password"
+          autocomplete="current-password"
+          autofocus
+        >
+        <p class="login-error" id="errorMsg"></p>
+        <button class="login-btn" type="submit">Enter</button>
+      </form>
+    </div>
+  </main>
+
+  <script>
+    // SHA-256 hash of the access password
+    // To update: run `echo -n "newpassword" | shasum -a 256` in Terminal
+    // then replace the hash string below
+    const PASSWORD_HASH = 'bc69402d24474e21c4f4bd81c843569075463990cea505ab7e31ff88e2326cc8';
+
+    async function sha256(str) {
+      const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+      return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+    }
+
+    const params = new URLSearchParams(location.search);
+    const redirect = params.get('redirect') || 'bike-customizer.html';
+
+    document.getElementById('loginForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      const val = document.getElementById('passwordInput').value;
+      const hash = await sha256(val);
+      if (hash === PASSWORD_HASH) {
+        sessionStorage.setItem('auth', '1');
+        location.replace(redirect);
+      } else {
+        document.getElementById('errorMsg').textContent = 'Incorrect password. Please try again.';
+        document.getElementById('passwordInput').value = '';
+        document.getElementById('passwordInput').focus();
+      }
+    });
+  </script>
+
+</body>
+</html>
