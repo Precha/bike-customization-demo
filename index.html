@@ -2,23 +2,25 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="robots" content="noindex, nofollow">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Giant Custom Paint Program</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
   <style>
-    @font-face { font-family:'Overpass'; src:url('fonts/overpass-regular.ttf') format('truetype'); font-weight:400; }
-    @font-face { font-family:'Overpass'; src:url('fonts/overpass-semibold.ttf') format('truetype'); font-weight:600; }
-    @font-face { font-family:'Overpass'; src:url('fonts/overpass-bold.ttf') format('truetype'); font-weight:700; }
-    @font-face { font-family:'Overpass'; src:url('fonts/overpass-extrabold.ttf') format('truetype'); font-weight:800; }
+    @font-face { font-family:'Open Sans'; src:url('fonts/OpenSans-Light.ttf') format('truetype'); font-weight:300; font-style:normal; }
+    @font-face { font-family:'Open Sans'; src:url('fonts/OpenSans-Regular.ttf') format('truetype'); font-weight:400; font-style:normal; }
+    @font-face { font-family:'Open Sans'; src:url('fonts/OpenSans-SemiBold.ttf') format('truetype'); font-weight:600; font-style:normal; }
+    @font-face { font-family:'Open Sans'; src:url('fonts/OpenSans-Bold.ttf') format('truetype'); font-weight:700; font-style:normal; }
+    @font-face { font-family:'Open Sans'; src:url('fonts/OpenSans-ExtraBold.ttf') format('truetype'); font-weight:800; font-style:normal; }
 
     *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
     html, body { height:100%; }
     body {
-      font-family:'Overpass','Helvetica Neue',Arial,sans-serif;
+      font-family:'Open Sans','Helvetica Neue',sans-serif;
       -webkit-font-smoothing:antialiased;
-      background:#0a0a0a;
-      color:#fff;
+      background:#C1C2C7;
+      color:#111;
       display:flex;
       flex-direction:column;
     }
@@ -26,16 +28,23 @@
     /* NAV */
     .site-nav {
       height:80px;
-      background:rgba(6,3,141,.9);
-      backdrop-filter:blur(12px);
-      -webkit-backdrop-filter:blur(12px);
+      background:#BEBFC4;
+      border-bottom:1px solid rgba(0,0,0,.08);
+      box-shadow:0 2px 8px rgba(0,0,0,.06);
       display:flex;
       align-items:center;
       justify-content:center;
       padding:0 20px;
       flex-shrink:0;
     }
-    .site-nav img { height:22px; width:auto; }
+
+    /* Nav brand lockup */
+    .nav-brand-lockup { display:flex; align-items:center; gap:8px; white-space:nowrap; }
+    .brand-maker-img { height:56px; width:auto; display:block; }
+    .brand-by { font-size:9px; font-weight:500; color:rgba(0,0,0,.4); letter-spacing:.06em; }
+    .brand-giant-img { height:14px; width:auto; display:block; }
+    .brand-sep { font-size:10px; color:rgba(0,0,0,.25); line-height:1; }
+    .brand-liv-img { height:11px; width:auto; display:block; }
 
     /* MAIN */
     main {
@@ -59,17 +68,19 @@
       font-size:10px;
       font-weight:700;
       letter-spacing:.22em;
-      color:rgba(255,255,255,.45);
+      color:rgba(0,0,0,.45);
       text-transform:uppercase;
       text-align:center;
     }
 
     .login-title {
-      font-size:36px;
-      font-weight:800;
-      letter-spacing:-.02em;
+      font-family:'Bebas Neue',sans-serif;
+      font-size:48px;
+      font-weight:400;
+      letter-spacing:.04em;
+      color:#111;
       text-align:center;
-      line-height:1.1;
+      line-height:1.05;
     }
 
     .login-form {
@@ -82,51 +93,40 @@
     .login-input {
       width:100%;
       padding:14px 18px;
-      background:rgba(255,255,255,.07);
-      border:1.5px solid rgba(255,255,255,.15);
+      background:#fff;
+      border:1.5px solid rgba(0,0,0,.15);
       border-radius:8px;
-      color:#fff;
-      font-family:'Overpass',sans-serif;
+      color:#111;
+      font-family:'Open Sans',sans-serif;
       font-size:15px;
       font-weight:400;
       outline:none;
       transition:border-color .2s;
       letter-spacing:.05em;
     }
-    .login-input::placeholder { color:rgba(255,255,255,.3); letter-spacing:.05em; }
-    .login-input:focus { border-color:rgba(255,255,255,.45); }
+    .login-input::placeholder { color:rgba(0,0,0,.3); letter-spacing:.05em; }
+    .login-input:focus { border-color:rgb(6,3,141); }
 
     .login-btn {
       position:relative;
       overflow:hidden;
       width:100%;
       padding:15px 40px;
-      background:#fff;
-      color:rgb(6,3,141);
-      border:2px solid #fff;
+      background:rgb(6,3,141);
+      color:#fff;
+      border:2px solid rgb(6,3,141);
       border-radius:999px;
-      font-family:'Overpass',sans-serif;
+      font-family:'Open Sans',sans-serif;
       font-size:13px;
       font-weight:800;
       letter-spacing:.1em;
       text-transform:uppercase;
       cursor:pointer;
       z-index:0;
-      transition:color .35s ease;
+      transition:opacity .2s;
       margin-top:4px;
     }
-    .login-btn::before {
-      content:'';
-      position:absolute;
-      inset:0;
-      background:rgb(6,3,141);
-      transform:scaleX(0);
-      transform-origin:left center;
-      transition:transform .35s ease;
-      z-index:-1;
-    }
-    .login-btn:hover { color:#fff; }
-    .login-btn:hover::before { transform:scaleX(1); }
+    .login-btn:hover { opacity:.85; }
 
     .login-error {
       font-size:13px;
@@ -141,7 +141,13 @@
 <body>
 
   <nav class="site-nav">
-    <img src="images/Giant_Horizontal_Signature_RGB_White.png" alt="Giant">
+    <div class="nav-brand-lockup">
+      <img src="assets/Logo/logo_maker_studio.png" class="brand-maker-img" alt="Maker Studio">
+      <span class="brand-by">by</span>
+      <img src="images/giant-logo-h.svg" class="brand-giant-img" alt="Giant">
+      <span class="brand-sep">×</span>
+      <img src="assets/Logo/Liv_Logotype_black.png" class="brand-liv-img" alt="Liv">
+    </div>
   </nav>
 
   <main>
